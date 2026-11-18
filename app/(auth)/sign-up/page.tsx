@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -16,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
+import { useRouter } from "next/navigation"
 
 const STORAGE_KEY = "repairlagbe-signup-form"
 
@@ -113,17 +113,13 @@ const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitMessage, setSubmitMessage] = useState("")
+  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
     const { fullName, email, role } = form
 
     saveForm({ fullName, email, role })
-
-    console.log("[RepairLagbe] Sign Up Input:", {
-      fullName,
-      email,
-      role,
-    })
   }, [form.fullName, form.email, form.role])
 
   const updateForm = (updates: Partial<FormData>) => {
@@ -153,51 +149,52 @@ const SignUpPage = () => {
     } else if (form.password.length < 6) {
       newErrors.password = "Password must be at least 6 characters"
     } else if (!/[A-Z]/.test(form.password)) {
-      newErrors.password =
-        "Password must contain at least one uppercase letter"
+      newErrors.password = "Password must contain at least one uppercase letter"
     } else if (!/[a-z]/.test(form.password)) {
-      newErrors.password =
-        "Password must contain at least one lowercase letter"
+      newErrors.password = "Password must contain at least one lowercase letter"
     }
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
- 
+  const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault()
+    if (!validate() || isSubmitting) {
+      setSubmitMessage("")
+      return
+    }
 
-  if (!validate()) {
+    setIsSubmitting(true)
     setSubmitMessage("")
-    return
+
+    try {
+      const { error } = await authClient.signUp.email({
+        name: form.fullName.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        role: form.role,
+        callbackURL: "/",
+      })
+
+      if (error) {
+        setSubmitMessage(error.message || "Sign Up failed.")
+        return
+      }
+
+      sessionStorage.removeItem(STORAGE_KEY)
+      setSubmitMessage("Account created successfully!")
+
+      router.replace("/")
+      router.refresh()
+    } catch (error) {
+      console.error("Sign Up Exception:", error)
+      setSubmitMessage("Something went wrong. Please try again.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-
-  try {
-    const { data, error } = await authClient.signUp.email({
-      name: form.fullName.trim(),
-      email: form.email.trim(),
-      password: form.password,
-      callbackURL: "/",
-    })
-
-    if (error) {
-  console.error("SIGN UP ERROR:", error)
-  console.error("ERROR MESSAGE:", error.message)
-  setSubmitMessage(error.message || "Sign Up failed.")
-  return
-}
-
-console.log("SIGN UP SUCCESS")
-setSubmitMessage("Account created successfully!")
-  } catch (error) {
-    console.error("Sign Up Exception:", error)
-    setSubmitMessage("Something went wrong. Please try again.")
-  }
-}
-
-
 
   const passwordRequirements = [
     { text: "At least 6 characters", met: form.password.length >= 6 },
@@ -206,19 +203,19 @@ setSubmitMessage("Account created successfully!")
   ]
 
   return (
-    <div className="min-h-svh flex flex-col bg-background">
+    <div className="flex min-h-svh flex-col bg-background">
       <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link
               href="/"
               className="flex items-center gap-2.5"
               aria-label="RepairLagbe homepage"
             >
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+              <div className="bg-brand-teal/10 text-brand-teal flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
                 <Wrench size={20} strokeWidth={2} />
               </div>
-              <span className="font-semibold text-[#102A43] tracking-tight text-lg">
+              <span className="text-lg font-semibold tracking-tight text-[#102A43]">
                 RepairLagbe
               </span>
             </Link>
@@ -228,25 +225,25 @@ setSubmitMessage("Account created successfully!")
 
       <main className="flex-1">
         <div className="bg-brand-bg-light">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-2">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-teal/10 text-brand-teal text-xs font-semibold mb-6">
+                <div className="bg-brand-teal/10 text-brand-teal mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
                   <Wrench size={14} strokeWidth={2} />
                   Join RepairLagbe
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-4">
+                <h1 className="mb-4 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
                   Create your account
                 </h1>
 
-                <p className="text-lg text-muted-foreground mb-8 max-w-md">
+                <p className="mb-8 max-w-md text-lg text-muted-foreground">
                   Create an account to access RepairLagbe home repair services.
                 </p>
 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-lg bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+                    <div className="bg-brand-teal/10 text-brand-teal flex h-10 w-10 items-center justify-center rounded-lg">
                       <Sparkles size={20} strokeWidth={2} />
                     </div>
                     <div>
@@ -259,8 +256,8 @@ setSubmitMessage("Account created successfully!")
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-lg bg-brand-amber/10 flex items-center justify-center text-amber-600">
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+                    <div className="bg-brand-amber/10 flex h-10 w-10 items-center justify-center rounded-lg text-amber-600">
                       <Hammer size={20} strokeWidth={2} />
                     </div>
                     <div>
@@ -279,17 +276,17 @@ setSubmitMessage("Account created successfully!")
                 <div className="w-full max-w-md">
                   <div className="rounded-xl border border-border bg-card shadow-sm">
                     <div className="p-8">
-                      <div className="flex items-center justify-center mb-8">
-                        <div className="w-12 h-12 rounded-xl bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+                      <div className="mb-8 flex items-center justify-center">
+                        <div className="bg-brand-teal/10 text-brand-teal flex h-12 w-12 items-center justify-center rounded-xl">
                           <User size={24} strokeWidth={2} />
                         </div>
                       </div>
 
-                      <h2 className="text-2xl font-semibold text-foreground text-center mb-2">
+                      <h2 className="mb-2 text-center text-2xl font-semibold text-foreground">
                         Sign Up
                       </h2>
 
-                      <p className="text-center text-muted-foreground text-sm mb-8">
+                      <p className="mb-8 text-center text-sm text-muted-foreground">
                         Enter your account information
                       </p>
 
@@ -398,7 +395,7 @@ setSubmitMessage("Account created successfully!")
                               aria-label={
                                 showPassword ? "Hide password" : "Show password"
                               }
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                             >
                               {showPassword ? (
                                 <EyeOff size={18} strokeWidth={2} />
@@ -414,7 +411,7 @@ setSubmitMessage("Account created successfully!")
                             </p>
                           )}
 
-                          <div className="space-y-1 mt-2">
+                          <div className="mt-2 space-y-1">
                             {passwordRequirements.map((requirement) => (
                               <div
                                 key={requirement.text}
@@ -427,7 +424,7 @@ setSubmitMessage("Account created successfully!")
                               >
                                 <span
                                   className={cn(
-                                    "w-1.5 h-1.5 rounded-full",
+                                    "h-1.5 w-1.5 rounded-full",
                                     requirement.met
                                       ? "bg-emerald-600"
                                       : "bg-muted"
@@ -438,8 +435,7 @@ setSubmitMessage("Account created successfully!")
                             ))}
                           </div>
                         </div>
-                               {/* {Account types field } */}
-
+                        {/* {Account types field } */}
 
                         <div className="space-y-2">
                           <label className={labelBase}>Account type</label>
@@ -456,21 +452,25 @@ setSubmitMessage("Account created successfully!")
                                 <button
                                   key={role.value}
                                   type="button"
-                                  onClick={() => updateForm({ role: role.value })}
+                                  onClick={() =>
+                                    updateForm({ role: role.value })
+                                  }
                                   className={cn(
-                                    "flex flex-col items-center justify-center gap-2 p-3 rounded-lg border transition-all",
+                                    "flex flex-col items-center justify-center gap-2 rounded-lg border p-3 transition-all",
                                     isSelected
                                       ? "border-[#167D9A] bg-[#167D9A]/5 text-[#167D9A]"
-                                      : "border-input bg-background hover:bg-muted text-foreground"
+                                      : "border-input bg-background text-foreground hover:bg-muted"
                                   )}
                                   aria-checked={isSelected}
                                   role="radio"
                                 >
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center">
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-lg">
                                     <Icon
                                       size={16}
                                       strokeWidth={2}
-                                      fill={isSelected ? "currentColor" : "none"}
+                                      fill={
+                                        isSelected ? "currentColor" : "none"
+                                      }
                                     />
                                   </div>
                                   <span className="text-xs font-medium">
@@ -487,13 +487,13 @@ setSubmitMessage("Account created successfully!")
 
                         {submitMessage && (
                           <div
-                            className="flex items-start gap-2 p-3 rounded-lg bg-muted border border-border text-muted-foreground text-sm"
+                            className="flex items-start gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground"
                             role="status"
                           >
                             <AlertCircle
                               size={16}
                               strokeWidth={2}
-                              className="shrink-0 mt-0.5"
+                              className="mt-0.5 shrink-0"
                             />
                             {submitMessage}
                           </div>
@@ -502,8 +502,11 @@ setSubmitMessage("Account created successfully!")
                         <Button
                           type="submit"
                           className={`${btnPrimary} w-full`}
+                          disabled={isSubmitting}
                         >
-                          Create Account
+                          {isSubmitting
+                            ? "Creating Account..."
+                            : "Create Account"}
                         </Button>
                       </form>
 

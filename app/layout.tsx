@@ -7,6 +7,7 @@ import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
+import { Toaster } from "@/components/ui/sonner"
 
 const geist = Geist({
   subsets: ["latin"],
@@ -56,6 +57,8 @@ const RootLayout = ({
           <Navbar />
           {children}
         </ThemeProvider>
+
+        <Toaster />
       </body>
     </html>
   )

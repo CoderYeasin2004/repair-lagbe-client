@@ -1,9 +1,10 @@
+
 "use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useRef, useEffect, } from "react"
 import {
   Wrench,
   Sun,
@@ -20,6 +21,11 @@ import {
   Info,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { signOut, useSession } from "@/lib/auth-client"
+import { toast } from "sonner"
+
+
+
 
 const ROUTE_MAP: Record<string, string> = {
   customer: "/customer/dashboard",
@@ -63,18 +69,35 @@ const NAV_LINKS = [
   { href: "/about", label: "How It Works", Icon: Info },
 ] as const
 
-export const Navbar = ({
-  user,
-}: {
-  user?: { name: string; email: string; role: string; image: string | null } | null
-} = {}) => {
+export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
+  
 
-  const currentUser = user ?? null
-  const isLoggedIn = !!currentUser
+  // Session integration will be added here.
+
+const { data: session, isPending } = useSession()
+
+const currentUser = session?.user ?? null
+const isLoggedIn = !!currentUser
+
+const hasShownLoginToast = useRef(false)
+
+useEffect(() => {
+  if (isPending) return
+
+  if (isLoggedIn && !hasShownLoginToast.current) {
+    toast.success(`Welcome back, ${currentUser.name}!`)
+    hasShownLoginToast.current = true
+  }
+
+  if (!isLoggedIn) {
+    hasShownLoginToast.current = false
+  }
+}, [isPending, isLoggedIn, currentUser?.name])
+
 
   const handleThemeToggle = useCallback(() => {
     setTheme(theme === "dark" ? "light" : "dark")
@@ -141,7 +164,9 @@ export const Navbar = ({
     <div
       className={cn(
         "fixed top-14 right-0 mt-2 w-72 origin-top-right z-50",
-        isUserDropdownOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none",
+        isUserDropdownOpen
+          ? "opacity-100 scale-100"
+          : "opacity-0 scale-95 pointer-events-none",
         "transition-all duration-200 ease-out",
       )}
     >
@@ -157,7 +182,9 @@ export const Navbar = ({
               <p className="text-sm font-semibold text-foreground truncate">
                 {currentUser?.name}
               </p>
-              <p className="text-xs text-muted-foreground truncate">{currentUser?.email}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {currentUser?.email}
+              </p>
             </div>
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-[#167D9A]" />
@@ -192,7 +219,12 @@ export const Navbar = ({
             </Link>
             <div className="border-t border-border pt-3">
               <button
-                onClick={() => setIsUserDropdownOpen(false)}
+                onClick={async () => {
+  await signOut()
+  setIsUserDropdownOpen(false)
+  setIsMobileMenuOpen(false)
+  toast.success("Logged out successfully!")
+}}
                 className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-destructive rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
               >
                 <LogOut size={16} strokeWidth={2} />
@@ -245,7 +277,6 @@ export const Navbar = ({
       <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            {/* Brand */}
             <Link
               href="/"
               className="flex items-center gap-2.5"
@@ -259,18 +290,15 @@ export const Navbar = ({
               </span>
             </Link>
 
-            {/* Desktop navigation — centered */}
             <div className="hidden lg:flex flex-1 justify-center">
               {navLinks}
             </div>
 
-            {/* Desktop right actions — theme toggle + auth */}
             <div className="hidden lg:flex items-center gap-3">
               {themeToggle}
               {rightContent}
             </div>
 
-            {/* Mobile controls — theme toggle + hamburger. lg:hidden prevents duplicate on desktop. */}
             <div className="flex items-center gap-3 lg:hidden">
               {themeToggle}
               <button
@@ -290,7 +318,6 @@ export const Navbar = ({
         </div>
       </nav>
 
-      {/* Mobile menu */}
       <div
         className={cn(
           "fixed inset-y-0 right-0 z-40 w-full max-w-md transform transition-transform duration-300 ease-in-out bg-background border-l border-border",
@@ -411,7 +438,6 @@ export const Navbar = ({
         </div>
       </div>
 
-      {/* User dropdown overlay (desktop) — rendered outside nav for correct z-index layering */}
       {isLoggedIn && isUserDropdownOpen && profileDropdown}
     </>
   )

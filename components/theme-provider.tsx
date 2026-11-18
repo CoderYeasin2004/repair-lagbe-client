@@ -3,10 +3,10 @@
 import * as React from "react"
 import { ThemeProvider as NextThemesProvider, useTheme } from "next-themes"
 
-function ThemeProvider({
+const ThemeProvider = ({
   children,
   ...props
-}: React.ComponentProps<typeof NextThemesProvider>) {
+}: React.ComponentProps<typeof NextThemesProvider>) => {
   return (
     <NextThemesProvider
       attribute="class"
@@ -21,7 +21,7 @@ function ThemeProvider({
   )
 }
 
-function isTypingTarget(target: EventTarget | null) {
+const isTypingTarget = (target: EventTarget | null): boolean => {
   if (!(target instanceof HTMLElement)) {
     return false
   }
@@ -34,11 +34,11 @@ function isTypingTarget(target: EventTarget | null) {
   )
 }
 
-function ThemeHotkey() {
+const ThemeHotkey = () => {
   const { resolvedTheme, setTheme } = useTheme()
 
   React.useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
+    const onKeyDown = (event: KeyboardEvent): void => {
       if (event.defaultPrevented || event.repeat) {
         return
       }
@@ -47,9 +47,9 @@ function ThemeHotkey() {
         return
       }
 
-      if (event.key.toLowerCase() !== "d") {
-        return
-      }
+     if (typeof event.key !== "string" || event.key.toLowerCase() !== "d") {
+  return
+}
 
       if (isTypingTarget(event.target)) {
         return

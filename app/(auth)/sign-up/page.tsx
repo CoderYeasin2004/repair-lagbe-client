@@ -441,7 +441,7 @@ setSubmitMessage("Account created successfully!")
                                {/* {Account types field } */}
 
 
-                        {/* <div className="space-y-2">
+                        <div className="space-y-2">
                           <label className={labelBase}>Account type</label>
                           <div
                             className="grid grid-cols-2 gap-3"
@@ -483,7 +483,7 @@ setSubmitMessage("Account created successfully!")
                               )
                             })}
                           </div>
-                        </div> */}
+                        </div>
 
                         {submitMessage && (
                           <div

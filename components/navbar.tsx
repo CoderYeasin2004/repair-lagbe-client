@@ -63,11 +63,11 @@ const NAV_LINKS = [
   { href: "/about", label: "How It Works", Icon: Info },
 ] as const
 
-export function Navbar({
+export const Navbar = ({
   user,
 }: {
   user?: { name: string; email: string; role: string; image: string | null } | null
-} = {}) {
+} = {}) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const { theme, setTheme } = useTheme()

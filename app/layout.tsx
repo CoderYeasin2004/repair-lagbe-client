@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -11,6 +12,23 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: "RepairLagbe — Home Appliance & Service Booking",
+  description:
+    "Find trusted technicians for plumbing, electrical, carpentry, and more. Transparent pricing, verified pros, and easy booking.",
+  icons: [
+    { rel: "icon", url: "/icon.svg", sizes: "any" },
+    { rel: "apple-touch-icon", url: "/icon.svg" },
+  ],
+  openGraph: {
+    title: "RepairLagbe — Home Appliance & Service Booking",
+    description:
+      "Find trusted technicians for plumbing, electrical, carpentry, and more.",
+    siteName: "RepairLagbe",
+    type: "website",
+  },
+}
 
 export default function RootLayout({
   children,

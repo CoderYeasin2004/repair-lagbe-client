@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -16,6 +15,7 @@ import {
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
+import { toast } from "sonner"
 
 const btnPrimary =
   "inline-flex items-center justify-center rounded-lg border border-transparent bg-[#167D9A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#0f5f7a] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
@@ -55,52 +55,50 @@ const SignInPage = () => {
     return Object.keys(newErrors).length === 0
   }
 
- 
-const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault()
+  const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
 
-  if (!validate()) {
-    setSubmitMessage("")
-    return
-  }
-
-  try {
-    const { data, error } = await authClient.signIn.email({
-      email,
-      password,
-      rememberMe: true,
-      callbackURL: "/",
-    })
-
-    if (error) {
-      console.error("Sign In Error:", error)
-      setSubmitMessage(error.message || "Sign In failed. Please try again.")
+    if (!validate()) {
+      setSubmitMessage("")
       return
     }
 
-    console.log("Sign In Successful", data)
-    setSubmitMessage("Signed in successfully!")
-  } catch (error) {
-    console.error("Sign In Error:", error)
-    setSubmitMessage("Something went wrong. Please try again.")
-  }
-}
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+        rememberMe: true,
+        callbackURL: "/",
+      })
 
+      if (error) {
+        console.error("Sign In Error:", error)
+        toast.error(error.message || "Invalid email or password.")
+        setSubmitMessage(error.message || "Invalid email or password.")
+        return
+      }
+      console.log("Sign In Successful", data)
+      setSubmitMessage("Signed in successfully!")
+    } catch (error) {
+      console.error("Sign In Error:", error)
+      setSubmitMessage("Something went wrong. Please try again.")
+    }
+  }
 
   return (
-    <div className="min-h-svh flex flex-col bg-background">
+    <div className="flex min-h-svh flex-col bg-background">
       <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link
               href="/"
               className="flex items-center gap-2.5"
               aria-label="RepairLagbe homepage"
             >
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+              <div className="bg-brand-teal/10 text-brand-teal flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg">
                 <Wrench size={20} strokeWidth={2} />
               </div>
-              <span className="font-semibold text-[#102A43] tracking-tight text-lg">
+              <span className="text-lg font-semibold tracking-tight text-[#102A43]">
                 RepairLagbe
               </span>
             </Link>
@@ -110,26 +108,26 @@ const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
 
       <main className="flex-1">
         <div className="bg-brand-bg-light">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-12 lg:grid-cols-2">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-teal/10 text-brand-teal text-xs font-semibold mb-6">
+                <div className="bg-brand-teal/10 text-brand-teal mb-6 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold">
                   <Wrench size={14} strokeWidth={2} />
                   Welcome back
                 </div>
 
-                <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-foreground mb-4">
+                <h1 className="mb-4 text-4xl font-semibold tracking-tight text-foreground md:text-5xl">
                   Sign in to your account
                 </h1>
 
-                <p className="text-lg text-muted-foreground mb-8 max-w-md">
+                <p className="mb-8 max-w-md text-lg text-muted-foreground">
                   Enter your email and password to access your RepairLagbe
                   account and manage your service bookings.
                 </p>
 
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-lg bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+                    <div className="bg-brand-teal/10 text-brand-teal flex h-10 w-10 items-center justify-center rounded-lg">
                       <Lock size={20} strokeWidth={2} />
                     </div>
                     <div>
@@ -142,8 +140,8 @@ const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border">
-                    <div className="w-10 h-10 rounded-lg bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+                  <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+                    <div className="bg-brand-teal/10 text-brand-teal flex h-10 w-10 items-center justify-center rounded-lg">
                       <BriefcaseBusiness size={20} strokeWidth={2} />
                     </div>
                     <div>
@@ -162,17 +160,17 @@ const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
                 <div className="w-full max-w-md">
                   <div className="rounded-xl border border-border bg-card shadow-sm">
                     <div className="p-8">
-                      <div className="flex items-center justify-center mb-8">
-                        <div className="w-12 h-12 rounded-xl bg-brand-teal/10 flex items-center justify-center text-brand-teal">
+                      <div className="mb-8 flex items-center justify-center">
+                        <div className="bg-brand-teal/10 text-brand-teal flex h-12 w-12 items-center justify-center rounded-xl">
                           <User size={24} strokeWidth={2} />
                         </div>
                       </div>
 
-                      <h2 className="text-2xl font-semibold text-foreground text-center mb-2">
+                      <h2 className="mb-2 text-center text-2xl font-semibold text-foreground">
                         Sign In
                       </h2>
 
-                      <p className="text-center text-muted-foreground text-sm mb-8">
+                      <p className="mb-8 text-center text-sm text-muted-foreground">
                         Welcome back to RepairLagbe
                       </p>
 
@@ -244,7 +242,7 @@ const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
                               aria-label={
                                 showPassword ? "Hide password" : "Show password"
                               }
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                              className="absolute top-1/2 right-3 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
                             >
                               {showPassword ? (
                                 <EyeOff size={18} strokeWidth={2} />
@@ -263,13 +261,13 @@ const handleSignIn = async (e: FormEvent<HTMLFormElement>) => {
 
                         {submitMessage && (
                           <div
-                            className="flex items-start gap-2 p-3 rounded-lg bg-muted border border-border text-muted-foreground text-sm"
+                            className="flex items-start gap-2 rounded-lg border border-border bg-muted p-3 text-sm text-muted-foreground"
                             role="status"
                           >
                             <AlertCircle
                               size={16}
                               strokeWidth={2}
-                              className="shrink-0 mt-0.5"
+                              className="mt-0.5 shrink-0"
                             />
                             {submitMessage}
                           </div>

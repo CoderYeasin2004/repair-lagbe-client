@@ -1,10 +1,9 @@
-
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useCallback, useState, useRef, useEffect, } from "react"
+import { useCallback, useState, useRef, useEffect } from "react"
 import {
   Wrench,
   Sun,
@@ -23,9 +22,7 @@ import {
 import { cn } from "@/lib/utils"
 import { signOut, useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
-
-
-
+import { router } from "better-auth/api"
 
 const ROUTE_MAP: Record<string, string> = {
   customer: "/customer/dashboard",
@@ -74,31 +71,37 @@ export const Navbar = () => {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
-  
+  const router = useRouter()
 
-  // Session integration will be added here.
+  // Session integration is here.
 
-const { data: session, isPending } = useSession()
+  const { data: session, isPending } = useSession()
 
-const currentUser = session?.user ?? null
-const isLoggedIn = !!currentUser
+  const currentUser = session?.user ?? null
+  const isLoggedIn = !!currentUser
 
-const hasShownLoginToast = useRef(false)
+  const hasShownLoginToast = useRef(false)
 
-useEffect(() => {
-  if (isPending) return
+  useEffect(() => {
+    if (isPending) return
 
-  if (isLoggedIn && !hasShownLoginToast.current) {
-    toast.success(`Welcome back, ${currentUser.name}!`)
-    hasShownLoginToast.current = true
+    if (isLoggedIn && !hasShownLoginToast.current) {
+      toast.success(`Welcome back, ${currentUser.name}!`)
+      hasShownLoginToast.current = true
+    }
+
+    if (!isLoggedIn) {
+      hasShownLoginToast.current = false
+    }
+  }, [isPending, isLoggedIn, currentUser?.name])
+
+  const handleSignOut = async () => {
+    await signOut()
+    setIsUserDropdownOpen(false)
+    setIsMobileMenuOpen(false)
+    toast.success("Logged out successfully!")
+    router.push("/sign-in")
   }
-
-  if (!isLoggedIn) {
-    hasShownLoginToast.current = false
-  }
-}, [isPending, isLoggedIn, currentUser?.name])
-
-
   const handleThemeToggle = useCallback(() => {
     setTheme(theme === "dark" ? "light" : "dark")
   }, [theme, setTheme])
@@ -117,10 +120,10 @@ useEffect(() => {
             key={link.href}
             href={link.href}
             className={cn(
-              "flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors rounded-lg",
+              "flex items-center gap-2 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
               active
                 ? "text-brand-teal bg-brand-teal/10"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted",
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
             )}
             aria-current={active ? "page" : undefined}
           >
@@ -136,13 +139,13 @@ useEffect(() => {
     <div className="flex items-center gap-3">
       <Link
         href="/sign-in"
-        className="text-sm font-medium text-foreground hover:text-[#167D9A] transition-colors px-4 py-2.5 rounded-lg hover:bg-muted"
+        className="rounded-lg px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted hover:text-[#167D9A]"
       >
         Sign In
       </Link>
       <Link
         href="/sign-up"
-        className="text-sm font-medium text-white bg-[#167D9A] hover:bg-[#0f5f7a] transition-colors px-5 py-2.5 rounded-lg shadow-sm"
+        className="rounded-lg bg-[#167D9A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0f5f7a]"
       >
         Sign Up
       </Link>
@@ -163,37 +166,37 @@ useEffect(() => {
   const profileDropdown = (
     <div
       className={cn(
-        "fixed top-14 right-0 mt-2 w-72 origin-top-right z-50",
+        "fixed top-14 right-0 z-50 mt-2 w-72 origin-top-right",
         isUserDropdownOpen
-          ? "opacity-100 scale-100"
-          : "opacity-0 scale-95 pointer-events-none",
-        "transition-all duration-200 ease-out",
+          ? "scale-100 opacity-100"
+          : "pointer-events-none scale-95 opacity-0",
+        "transition-all duration-200 ease-out"
       )}
     >
-      <div className="bg-background border border-border rounded-xl shadow-lg p-4">
+      <div className="rounded-xl border border-border bg-background p-4 shadow-lg">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 rounded-full bg-[#167D9A]/10 flex items-center justify-center text-[#167D9A] font-medium text-sm">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#167D9A]/10 text-sm font-medium text-[#167D9A]">
                 {userInitials}
               </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold text-foreground">
                 {currentUser?.name}
               </p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="truncate text-xs text-muted-foreground">
                 {currentUser?.email}
               </p>
             </div>
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#167D9A]" />
+            <div className="flex items-center gap-1 rounded-full px-2 py-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#167D9A]" />
               <span
                 className={cn(
                   "text-xs font-medium",
                   roleConfig.border,
                   roleConfig.bg,
-                  roleConfig.text,
+                  roleConfig.text
                 )}
               >
                 {roleConfig.label}
@@ -204,7 +207,7 @@ useEffect(() => {
             <Link
               href={ROUTE_MAP[currentUser?.role ?? "customer"]}
               onClick={() => setIsUserDropdownOpen(false)}
-              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-muted hover:text-[#167D9A] transition-colors"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted hover:text-[#167D9A]"
             >
               <LayoutDashboard size={16} strokeWidth={2} />
               Dashboard
@@ -212,20 +215,15 @@ useEffect(() => {
             <Link
               href={PROFILE_ROUTE_MAP[currentUser?.role ?? "customer"]}
               onClick={() => setIsUserDropdownOpen(false)}
-              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-foreground rounded-lg hover:bg-muted hover:text-[#167D9A] transition-colors"
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted hover:text-[#167D9A]"
             >
               <Settings size={16} strokeWidth={2} />
               Update Profile
             </Link>
             <div className="border-t border-border pt-3">
               <button
-                onClick={async () => {
-  await signOut()
-  setIsUserDropdownOpen(false)
-  setIsMobileMenuOpen(false)
-  toast.success("Logged out successfully!")
-}}
-                className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-destructive rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
+                onClick={handleSignOut}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-destructive transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <LogOut size={16} strokeWidth={2} />
                 Sign Out
@@ -240,8 +238,10 @@ useEffect(() => {
   const themeToggle = (
     <button
       onClick={handleThemeToggle}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      className="relative inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-background/50 transition-all hover:bg-muted hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+      aria-label={
+        theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+      }
+      className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background/50 transition-all hover:bg-muted hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
     >
       <ThemeToggleIcon size={18} strokeWidth={2.5} />
       <span className="sr-only">
@@ -256,15 +256,19 @@ useEffect(() => {
         onClick={() => setIsUserDropdownOpen((prev) => !prev)}
         aria-label="User profile menu"
         aria-expanded={isUserDropdownOpen}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
       >
-        <div className="w-8 h-8 rounded-full bg-[#167D9A]/10 flex items-center justify-center text-[#167D9A] font-medium text-xs">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
           {userInitials}
         </div>
-        <span className="hidden sm:inline text-sm font-medium text-foreground">
+        <span className="hidden text-sm font-medium text-foreground sm:inline">
           {currentUser?.name}
         </span>
-        <ChevronDown size={14} strokeWidth={2.5} className="text-muted-foreground" />
+        <ChevronDown
+          size={14}
+          strokeWidth={2.5}
+          className="text-muted-foreground"
+        />
       </button>
       {isLoggedIn && isUserDropdownOpen && profileDropdown}
     </div>
@@ -274,27 +278,27 @@ useEffect(() => {
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md supports-[backdrop-filter]:bg-background/60 transition-colors">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md transition-colors supports-[backdrop-filter]:bg-background/60">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link
               href="/"
               className="flex items-center gap-2.5"
               aria-label="RepairLagbe homepage"
             >
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#167D9A]/10 flex items-center justify-center text-[#167D9A]">
+              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
                 <Wrench size={20} strokeWidth={2} />
               </div>
-              <span className="font-semibold text-[#102A43] tracking-tight text-lg">
+              <span className="text-lg font-semibold tracking-tight text-[#102A43]">
                 RepairLagbe
               </span>
             </Link>
 
-            <div className="hidden lg:flex flex-1 justify-center">
+            <div className="hidden flex-1 justify-center lg:flex">
               {navLinks}
             </div>
 
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden items-center gap-3 lg:flex">
               {themeToggle}
               {rightContent}
             </div>
@@ -305,7 +309,7 @@ useEffect(() => {
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle navigation menu"
                 aria-expanded={isMobileMenuOpen}
-                className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border transition-all hover:bg-muted focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border transition-all hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
               >
                 {isMobileMenuOpen ? (
                   <X size={20} strokeWidth={2.5} />
@@ -320,28 +324,28 @@ useEffect(() => {
 
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-40 w-full max-w-md transform transition-transform duration-300 ease-in-out bg-background border-l border-border",
-          isMobileMenuOpen ? "translate-x-0" : "translate-x-full",
+          "fixed inset-y-0 right-0 z-40 w-full max-w-md transform border-l border-border bg-background transition-transform duration-300 ease-in-out",
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
-        <div className="flex h-16 items-center justify-between px-6 border-b border-border">
+        <div className="flex h-16 items-center justify-between border-b border-border px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#167D9A]/10 flex items-center justify-center text-[#167D9A]">
+            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
               <Wrench size={20} strokeWidth={2} />
             </div>
-            <span className="font-semibold text-[#102A43] tracking-tight text-lg">
+            <span className="text-lg font-semibold tracking-tight text-[#102A43]">
               RepairLagbe
             </span>
           </Link>
           <button
             onClick={() => setIsMobileMenuOpen(false)}
-            className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border hover:bg-muted text-foreground"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted"
             aria-label="Close navigation menu"
           >
             <X size={20} strokeWidth={2.5} />
           </button>
         </div>
-        <div className="p-6 space-y-1">
+        <div className="space-y-1 p-6">
           {NAV_LINKS.map((link) => {
             const Icon = link.Icon
             const active = isActive(link.href)
@@ -351,10 +355,10 @@ useEffect(() => {
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
                   active
-                    ? "text-[#167D9A] bg-[#167D9A]/10"
-                    : "text-foreground hover:bg-muted hover:text-[#167D9A]",
+                    ? "bg-[#167D9A]/10 text-[#167D9A]"
+                    : "text-foreground hover:bg-muted hover:text-[#167D9A]"
                 )}
               >
                 <Icon size={18} strokeWidth={2} />
@@ -362,27 +366,27 @@ useEffect(() => {
               </Link>
             )
           })}
-          <div className="border-t border-border pt-6 space-y-2">
+          <div className="space-y-2 border-t border-border pt-6">
             {isLoggedIn ? (
               <>
                 <div className="px-4">
-                  <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/50">
-                    <div className="w-8 h-8 rounded-full bg-[#167D9A]/10 flex items-center justify-center text-[#167D9A] font-medium text-xs">
+                  <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2.5">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
                       {userInitials}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
                         {currentUser?.name}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="truncate text-xs text-muted-foreground">
                         {currentUser?.email}
                       </p>
                       <span
                         className={cn(
-                          "mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                          "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
                           roleConfig.border,
                           roleConfig.bg,
-                          roleConfig.text,
+                          roleConfig.text
                         )}
                       >
                         {roleConfig.label}
@@ -390,11 +394,11 @@ useEffect(() => {
                     </div>
                   </div>
                 </div>
-                <div className="border-t border-border pt-4 space-y-1">
+                <div className="space-y-1 border-t border-border pt-4">
                   <Link
                     href={ROUTE_MAP[currentUser?.role ?? "customer"]}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-foreground rounded-lg hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
                   >
                     <LayoutDashboard size={18} strokeWidth={2} />
                     Dashboard
@@ -402,14 +406,14 @@ useEffect(() => {
                   <Link
                     href={PROFILE_ROUTE_MAP[currentUser?.role ?? "customer"]}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-foreground rounded-lg hover:bg-muted transition-colors"
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
                   >
                     <Settings size={18} strokeWidth={2} />
                     Update Profile
                   </Link>
                   <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 text-sm text-destructive rounded-lg hover:bg-destructive/10 transition-colors"
+                    onClick={handleSignOut}
+                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <LogOut size={18} strokeWidth={2} />
                     Sign Out
@@ -420,14 +424,14 @@ useEffect(() => {
               <div className="space-y-2">
                 <Link
                   href="/sign-in"
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-foreground rounded-lg hover:bg-muted transition-colors"
+                  className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <User size={18} strokeWidth={2} />
                   Sign In
                 </Link>
                 <Link
                   href="/sign-up"
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-white bg-[#167D9A] rounded-lg shadow-sm transition-colors"
+                  className="flex items-center gap-3 rounded-lg bg-[#167D9A] px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors"
                 >
                   <User size={18} strokeWidth={2} className="text-white" />
                   Sign Up

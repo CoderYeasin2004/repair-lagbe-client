@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -98,11 +97,14 @@ const menuItemsByRole = {
       icon: Receipt,
     },
   ],
-} satisfies Record<DashboardRole, {
-  name: string
-  url: string
-  icon: typeof LayoutDashboard
-}[]>
+} satisfies Record<
+  DashboardRole,
+  {
+    name: string
+    url: string
+    icon: typeof LayoutDashboard
+  }[]
+>
 
 export const DashboardSidebar = () => {
   const { data: session } = useSession()
@@ -111,21 +113,17 @@ export const DashboardSidebar = () => {
   const userRole = session?.user?.role
 
   // ORIGINAL ROLE LOGIC — restore after Admin UI preview
-// const role: DashboardRole =
-//   userRole === "technician" || userRole === "admin"
-//     ? userRole
-//     : "customer"
+  const role: DashboardRole =
+    userRole === "technician" || userRole === "admin" ? userRole : "customer"
 
+  // TEMPORARY: Admin Dashboard UI preview only
+  // const isAdminPreview = true
 
-
-// TEMPORARY: Admin Dashboard UI preview only
-const isAdminPreview = true
-
-const role: DashboardRole = isAdminPreview
-  ? "admin"
-  : userRole === "technician" || userRole === "admin"
-    ? userRole
-    : "customer"
+  // const role: DashboardRole = isAdminPreview
+  //   ? "admin"
+  //   : userRole === "technician" || userRole === "admin"
+  //     ? userRole
+  //     : "customer"
 
   const menuItems = menuItemsByRole[role]
 

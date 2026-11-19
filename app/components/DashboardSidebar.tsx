@@ -113,6 +113,8 @@ export const DashboardSidebar = () => {
   const { data: session, isPending } = useSession()
   const pathname = usePathname()
 
+   
+
   const userRole = session?.user?.role
 
   // ORIGINAL ROLE LOGIC — restore after Admin UI preview
@@ -134,6 +136,8 @@ export const DashboardSidebar = () => {
 
 useEffect(() => {
   if (isPending) return
+
+  
 
   if (!session) {
     router.replace("/sign-in")
@@ -159,6 +163,10 @@ useEffect(() => {
     router.replace(`/dashboard/${userRole}`)
   }
 }, [isPending, session, pathname, router])
+
+if (isPending) {
+    return null
+  }
 
   const menuItems = menuItemsByRole[role]
 

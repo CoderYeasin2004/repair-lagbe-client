@@ -25,9 +25,9 @@ import { toast } from "sonner"
 import { router } from "better-auth/api"
 
 const ROUTE_MAP: Record<string, string> = {
-  customer: "/customer/dashboard",
-  technician: "/technician/dashboard",
-  admin: "/admin/dashboard",
+  customer: "/dashboard/customer",
+  technician: "/dashboard/technician",
+  admin: "/dashboard/admin",
 }
 
 const PROFILE_ROUTE_MAP: Record<string, string> = {

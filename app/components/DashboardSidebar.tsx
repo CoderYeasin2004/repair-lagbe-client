@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useEffect } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -28,6 +29,8 @@ import {
 
 type DashboardRole = "customer" | "technician" | "admin"
 
+
+
 const menuItemsByRole = {
   customer: [
     {
@@ -37,7 +40,7 @@ const menuItemsByRole = {
     },
     {
       name: "My Bookings",
-      url: "/dashboard/customer/bookings",
+      url: "/dashboard/customer/my-bookings",
       icon: CalendarDays,
     },
     {
@@ -107,7 +110,7 @@ const menuItemsByRole = {
 >
 
 export const DashboardSidebar = () => {
-  const { data: session } = useSession()
+  const { data: session, isPending } = useSession()
   const pathname = usePathname()
 
   const userRole = session?.user?.role
@@ -124,6 +127,38 @@ export const DashboardSidebar = () => {
   //   : userRole === "technician" || userRole === "admin"
   //     ? userRole
   //     : "customer"
+
+
+ const router = useRouter()
+ 
+
+useEffect(() => {
+  if (isPending) return
+
+  if (!session) {
+    router.replace("/sign-in")
+    return
+  }
+
+  const userRole = session.user.role
+
+  if (
+    pathname.startsWith("/dashboard/admin") &&
+    userRole !== "admin"
+  ) {
+    router.replace(`/dashboard/${userRole}`)
+  } else if (
+    pathname.startsWith("/dashboard/technician") &&
+    userRole !== "technician"
+  ) {
+    router.replace(`/dashboard/${userRole}`)
+  } else if (
+    pathname.startsWith("/dashboard/customer") &&
+    userRole !== "customer"
+  ) {
+    router.replace(`/dashboard/${userRole}`)
+  }
+}, [isPending, session, pathname, router])
 
   const menuItems = menuItemsByRole[role]
 

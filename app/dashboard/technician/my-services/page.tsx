@@ -1,4 +1,3 @@
-
 import Link from "next/link"
 import {
   AlertCircle,
@@ -10,10 +9,10 @@ import {
   MapPin,
   Plus,
   Tag,
-  Trash2,
   Eye,
   Edit,
   Wrench as WrenchIcon,
+  Wrench,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -25,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { DeleteDialouge } from "../../../components/DeleteDialouge"
 import { cn } from "@/lib/utils"
 import { getServices } from "@/lib/api/services"
 
@@ -113,11 +113,6 @@ const handleEdit = (id: string) => {
   console.log(`Edit service: ${id}`)
 }
 
-const handleDelete = (id: string) => {
-  // UI-only action placeholder
-  console.log(`Delete service: ${id}`)
-}
-
 const ServiceCard = ({ service }: { service: Service }) => {
   const approval = getApprovalConfig(
   service.approvalStatus ?? "pending"
@@ -132,11 +127,13 @@ const availability = getAvailabilityConfig(
   return (
     <Card className="overflow-hidden hover:shadow-sm transition-shadow">
       <div className="relative h-48 overflow-hidden">
-       <img
-  src={service.imageUrl || "/placeholder.png"}
-  alt={service.title}
-  className="h-full w-full object-cover"
-/>
+       {service.imageUrl ? (
+  <img src={service.imageUrl} alt={service.title} />
+) : (
+  <div className="flex h-48 items-center justify-center bg-slate-100">
+    <Wrench className="h-12 w-12 text-slate-400" />
+  </div>
+)}
         <div className="absolute top-3 right-3">
           <Badge variant="outline" className={approval.className}>
             {approval.label}
@@ -191,14 +188,7 @@ const availability = getAvailabilityConfig(
       Edit
     </Button>
 
-    <Button
-      variant="outline"
-      size="sm"
-      className="text-destructive hover:bg-destructive/10"
-    >
-      <Trash2 className="size-3.5" />
-      Delete
-    </Button>
+    <DeleteDialouge serviceId={service._id} serviceTitle={service.title} />
   </div>
 </CardFooter>
     </Card>
@@ -338,20 +328,14 @@ export default async function MyServicesPage() {
             <div>
               <h2 className="text-xl font-bold text-[#102A43]">
                 Your Services
+                
               </h2>
               <p className="text-muted-foreground">
                 All your listed services and their current status.
               </p>
             </div>
 
-            <Link href="/dashboard/technician/add-service">
-              <Button
-                className="bg-[#167D9A] text-white shadow-sm hover:bg-[#0f5f7a]"
-              >
-                <Plus className="size-4" />
-                Add New Service
-              </Button>
-            </Link>
+             
           </div>
 
           {hasServices ? (

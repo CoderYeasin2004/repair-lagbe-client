@@ -18,3 +18,18 @@ export const createServices = async (serviceData: FormData) => {
 
   return response.json()
 }
+
+
+export const deleteService = async (serviceId: string) => {
+  const response = await fetch(`${BASE_URL}/services/${serviceId}`, {
+    method: "DELETE",
+  })
+
+  const result = await response.json()
+
+  if (!response.ok) {
+    throw new Error(result.message || "Failed to delete service")
+  }
+
+  return result
+}

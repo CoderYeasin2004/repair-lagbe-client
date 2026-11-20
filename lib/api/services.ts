@@ -31,3 +31,4 @@ export const getServiceById = async (serviceId: string) => {
 
   return response.json()
 }
+

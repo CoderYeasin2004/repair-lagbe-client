@@ -20,10 +20,33 @@ export const createServices = async  (serviceData: FormData) => {
 }
 
 
+export const createBooking = async (bookingData: {
+  serviceId: string
+  customerName: string
+  customerEmail: string
+  customerPhone: string
+  address: string
+  preferredDate: string
+  problemDescription: string
+}) => {
+  const response = await fetch(`${BASE_URL}/bookings`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(bookingData),
+  })
+
+  if (!response.ok) {
+    const result = await response.json()
+    throw new Error(result.message || "Failed to submit request.")
+  }
+
+  return response.json()
+}
 
 
-
-
+ 
 
 export const deleteService = async (serviceId: string) => {
   const response = await fetch(`${BASE_URL}/services/${serviceId}`, {

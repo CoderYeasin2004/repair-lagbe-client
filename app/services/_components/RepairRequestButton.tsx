@@ -2,7 +2,7 @@
 "use client"
 
 import { useState } from "react"
-import { usePathname, useRouter } from "next/navigation"
+import {  useRouter } from "next/navigation"
 import { useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
 
@@ -17,6 +17,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { createBooking } from "@/lib/actions/services"
 
 interface RepairRequestButtonProps {
   service: {
@@ -25,14 +26,12 @@ interface RepairRequestButtonProps {
   }
 }
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"
+
 
 export function RepairRequestButton({
   service,
 }: RepairRequestButtonProps) {
   const router = useRouter()
-  const pathname = usePathname()
   const { data: session, isPending } = useSession()
 
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -61,58 +60,46 @@ export function RepairRequestButton({
 }
 
   const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault()
+  event: React.FormEvent<HTMLFormElement>
+) => {
+  event.preventDefault()
 
-    if (!session?.user) {
-      toast.error("Please sign in first.")
-      return
-    }
-
-    if (problemDescription.trim().length < 20) {
-      toast.error("Problem description must be at least 20 characters.")
-      return
-    }
-
-    setIsSubmitting(true)
-
-    try {
-      const response = await fetch(`${BASE_URL}/bookings`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          serviceId: service._id,
-          customerName: session.user.name,
-          customerEmail: session.user.email,
-          customerPhone: phone,
-          address,
-          preferredDate,
-          problemDescription,
-        }),
-      })
-
-      const result = await response.json()
-
-      if (!response.ok) {
-        throw new Error(result.message || "Failed to submit request.")
-      }
-
-      toast.success("Repair request submitted successfully!")
-      setIsDialogOpen(false)
-      router.push("/dashboard/customer/bookings")
-    } catch (error) {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to submit repair request."
-      )
-    } finally {
-      setIsSubmitting(false)
-    }
+  if (!session?.user) {
+    toast.error("Please sign in first.")
+    return
   }
+
+  if (problemDescription.trim().length < 20) {
+    toast.error("Problem description must be at least 20 characters.")
+    return
+  }
+
+  setIsSubmitting(true)
+
+  try {
+    await createBooking({
+      serviceId: service._id,
+      customerName: session.user.name,
+      customerEmail: session.user.email,
+      customerPhone: phone,
+      address,
+      preferredDate,
+      problemDescription,
+    })
+
+    toast.success("Repair request submitted successfully!")
+    setIsDialogOpen(false)
+    router.push("/dashboard/customer/my-bookings")
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Failed to submit repair request."
+    )
+  } finally {
+    setIsSubmitting(false)
+  }
+}
 
   return (
     <>

@@ -20,6 +20,11 @@ export const createServices = async  (serviceData: FormData) => {
 }
 
 
+
+
+
+
+
 export const deleteService = async (serviceId: string) => {
   const response = await fetch(`${BASE_URL}/services/${serviceId}`, {
     method: "DELETE",

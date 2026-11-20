@@ -16,6 +16,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { useRouter, useSearchParams } from "next/navigation"
+
 
 const btnPrimary =
   "inline-flex items-center justify-center rounded-lg border border-transparent bg-[#167D9A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-[#0f5f7a] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
@@ -32,6 +34,12 @@ type FormErrors = {
 }
 
 const SignInPage = () => {
+const searchParams = useSearchParams()
+const router = useRouter()
+
+const redirectTo = searchParams.get("redirect") || "/"
+
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -68,7 +76,7 @@ const SignInPage = () => {
         email,
         password,
         rememberMe: true,
-        callbackURL: "/",
+        callbackURL: redirectTo,
       })
 
       if (error) {

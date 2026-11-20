@@ -17,3 +17,17 @@ export const getServices = async (query = "") => {
 
   return res.json()
 }
+
+
+
+export const getServiceById = async (serviceId: string) => {
+  const response = await fetch(`${BASE_URL}/services/${serviceId}`, {
+    cache: "no-store",
+  })
+
+  if (!response.ok) {
+    return null
+  }
+
+  return response.json()
+}

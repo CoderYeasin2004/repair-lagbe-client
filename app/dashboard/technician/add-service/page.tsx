@@ -1,9 +1,8 @@
-
 "use client"
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import {
   Wrench,
   Image as ImageIcon,
@@ -18,12 +17,7 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -38,6 +32,7 @@ import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { createServices } from "@/lib/actions/services"
 import { toast } from "sonner"
+import { useSession } from "@/lib/auth-client"
 
 const CATEGORY_LABELS: Record<string, string> = {
   smartphone: "Smartphone",
@@ -109,6 +104,10 @@ const AddServicePage = () => {
     }
   }
 
+  const { data: session } = useSession()
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitLock = useRef(false)
+
   const handleImageChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
@@ -126,54 +125,65 @@ const AddServicePage = () => {
     await uploadImage(file)
   }
 
- const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-  event.preventDefault()
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
-  if (isUploading) return
+    if (submitLock.current || isUploading || isSubmitting) return
 
-  if (selectedFile && !uploadedImageUrl) {
-    setUploadError("Please wait for the image upload to finish.")
-    return
+    if (!session?.user) {
+      toast.error("Please sign in first.")
+      return
+    }
+
+    if (selectedFile && !uploadedImageUrl) {
+      setUploadError("Please wait for the image upload to finish.")
+      return
+    }
+
+    // Prevent duplicate submission
+    submitLock.current = true
+    setIsSubmitting(true)
+
+    const serviceData = new FormData()
+
+    serviceData.append("title", title)
+    serviceData.append("category", category)
+    serviceData.append("description", description)
+    serviceData.append("price", String(Number(price)))
+    serviceData.append("duration", duration)
+    serviceData.append("serviceMode", serviceMode)
+    serviceData.append("serviceArea", serviceArea)
+    serviceData.append("createdAt", new Date().toISOString())
+    serviceData.append("approvalStatus", "pending")
+    serviceData.append("isAvailable", "true")
+    serviceData.append("technicianName", session.user.name)
+    serviceData.append("technicianEmail", session.user.email)
+
+    if (uploadedImageUrl) {
+      serviceData.append("imageUrl", uploadedImageUrl)
+    }
+
+    try {
+      const result = await createServices(serviceData)
+
+      toast.success("Service added successfully! Waiting for admin approval.")
+      console.log("Service created successfully:", result)
+
+      router.push("/dashboard/technician/my-services")
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to create service."
+
+      toast.error(message)
+      console.error("Failed to create service:", error)
+    } finally {
+      submitLock.current = false
+      setIsSubmitting(false)
+    }
   }
-
-  const serviceData = new FormData()
-
-serviceData.append("title", title)
-serviceData.append("category", category)
-serviceData.append("description", description)
-serviceData.append("price", String(Number(price)))
-serviceData.append("duration", duration)
-serviceData.append("serviceMode", serviceMode)
-serviceData.append("serviceArea", serviceArea)
-serviceData.append("createdAt", new Date().toISOString())
-
-if (uploadedImageUrl) {
-  serviceData.append("imageUrl", uploadedImageUrl)
-}
-
-  if (uploadedImageUrl) {
-    serviceData.append("imageUrl", uploadedImageUrl)
-  }
-
-  try {
-    const result = await createServices(serviceData)
-
-    toast.success("Service added successfully! Waiting for admin approval.")
-    router.push("/dashboard/technician/my-services")
-    console.log("Service created successfully:", result)
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Failed to create service."
-    toast.error(message)
-    console.error("Failed to create service:", error)
-  }
-}
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="min-h-screen bg-[#F5F7FA] py-8"
-    >
+    <form onSubmit={handleSubmit} className="min-h-screen bg-[#F5F7FA] py-8">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -244,7 +254,9 @@ if (uploadedImageUrl) {
                         <SelectItem value="smartphone">Smartphone</SelectItem>
                         <SelectItem value="laptop-pc">Laptop & PC</SelectItem>
                         <SelectItem value="ac">AC</SelectItem>
-                        <SelectItem value="refrigerator">Refrigerator</SelectItem>
+                        <SelectItem value="refrigerator">
+                          Refrigerator
+                        </SelectItem>
                         <SelectItem value="tv">TV</SelectItem>
                         <SelectItem value="washing-machine">
                           Washing Machine
@@ -261,9 +273,7 @@ if (uploadedImageUrl) {
                       placeholder="Describe what your repair service includes, common issues you fix, and what customers can expect."
                       className="min-h-[140px]"
                       value={description}
-                      onChange={(event) =>
-                        setDescription(event.target.value)
-                      }
+                      onChange={(event) => setDescription(event.target.value)}
                     />
                   </div>
 
@@ -351,9 +361,7 @@ if (uploadedImageUrl) {
                     <Input
                       placeholder="Enter the areas you provide service in (e.g. Mirpur, Dhaka)"
                       value={serviceArea}
-                      onChange={(event) =>
-                        setServiceArea(event.target.value)
-                      }
+                      onChange={(event) => setServiceArea(event.target.value)}
                     />
                   </div>
                 </div>
@@ -434,13 +442,13 @@ if (uploadedImageUrl) {
 
               <Button
                 type="submit"
-                disabled={isUploading}
+                disabled={isUploading || isSubmitting}
                 className="bg-[#167D9A] text-white shadow-sm hover:bg-[#0f5f7a]"
               >
-                {isUploading ? (
+                {isUploading || isSubmitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Uploading...
+                    {isUploading ? "Uploading..." : "Creating..."}
                   </>
                 ) : (
                   <>
@@ -450,116 +458,116 @@ if (uploadedImageUrl) {
                 )}
               </Button>
             </div>
-          </div>
+            </div>
 
-          {/* Right Column */}
-          <div className="space-y-6 lg:col-span-1">
-            {/* Service Preview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="size-4" />
-                  Service Preview
-                </CardTitle>
-              </CardHeader>
+            {/* Right Column */}
+            <div className="space-y-6 lg:col-span-1">
+              {/* Service Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Eye className="size-4" />
+                    Service Preview
+                  </CardTitle>
+                </CardHeader>
 
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted">
-                    {uploadedImageUrl || imagePreview ? (
-                      <img
-                        src={uploadedImageUrl || imagePreview || ""}
-                        alt="Service preview"
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <ImageIcon className="size-6 text-muted-foreground" />
-                        <span className="mt-1 text-xs text-muted-foreground">
-                          Service Image
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-sm font-semibold text-[#102A43]">
-                        {title || "Untitled Service"}
-                      </span>
-
-                      <Badge variant="outline" className="text-xs">
-                        {category
-                          ? CATEGORY_LABELS[category]
-                          : "Uncategorized"}
-                      </Badge>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground">
-                      {serviceMode === "home"
-                        ? "Home Visit"
-                        : "Shop Drop-off"}
-                      {serviceArea ? ` • ${serviceArea}` : ""}
-                      {duration ? ` • ${duration}` : ""}
-                    </p>
-
-                    <div className="mt-2 flex items-baseline gap-1">
-                      {price ? (
-                        <>
-                          <span className="text-lg font-bold text-[#102A43]">
-                            ৳{price}
-                          </span>
-                          <span className="text-sm text-muted-foreground">
-                            / service
-                          </span>
-                        </>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="relative aspect-square overflow-hidden rounded-xl border border-border bg-muted">
+                      {uploadedImageUrl || imagePreview ? (
+                        <img
+                          src={uploadedImageUrl || imagePreview || ""}
+                          alt="Service preview"
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
-                        <span className="text-lg font-bold text-muted-foreground">
-                          ৳0.00
-                        </span>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <ImageIcon className="size-6 text-muted-foreground" />
+                          <span className="mt-1 text-xs text-muted-foreground">
+                            Service Image
+                          </span>
+                        </div>
                       )}
                     </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Submission Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Info className="size-4" />
-                  Submission Information
-                </CardTitle>
-              </CardHeader>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-[#102A43]">
+                          {title || "Untitled Service"}
+                        </span>
 
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <AlertCircle className="size-5 flex-shrink-0 text-[#167D9A]" />
+                        <Badge variant="outline" className="text-xs">
+                          {category
+                            ? CATEGORY_LABELS[category]
+                            : "Uncategorized"}
+                        </Badge>
+                      </div>
 
-                    <div>
-                      <p className="text-sm text-[#102A43]">
-                        New services are submitted for admin approval.
+                      <p className="text-xs text-muted-foreground">
+                        {serviceMode === "home"
+                          ? "Home Visit"
+                          : "Shop Drop-off"}
+                        {serviceArea ? ` • ${serviceArea}` : ""}
+                        {duration ? ` • ${duration}` : ""}
                       </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Your service will be reviewed before it appears to
-                        customers.
-                      </p>
+
+                      <div className="mt-2 flex items-baseline gap-1">
+                        {price ? (
+                          <>
+                            <span className="text-lg font-bold text-[#102A43]">
+                              ৳{price}
+                            </span>
+                            <span className="text-sm text-muted-foreground">
+                              / service
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-lg font-bold text-muted-foreground">
+                            ৳0.00
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div className="flex items-center gap-2">
-                    <Badge className="border border-[#F59E0B]/20 bg-[#F59E0B]/10 text-[#F59E0B]">
-                      Pending Approval
-                    </Badge>
+              {/* Submission Information */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Info className="size-4" />
+                    Submission Information
+                  </CardTitle>
+                </CardHeader>
+
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
+                      <AlertCircle className="size-5 flex-shrink-0 text-[#167D9A]" />
+
+                      <div>
+                        <p className="text-sm text-[#102A43]">
+                          New services are submitted for admin approval.
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Your service will be reviewed before it appears to
+                          customers.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Badge className="border border-[#F59E0B]/20 bg-[#F59E0B]/10 text-[#F59E0B]">
+                        Pending Approval
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
-      </div>
     </form>
   )
 }

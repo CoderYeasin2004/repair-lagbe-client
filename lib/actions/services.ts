@@ -1,7 +1,7 @@
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"
 
-export const createServices = async (serviceData: FormData) => {
+export const createServices = async  (serviceData: FormData) => {
   const serviceObject = Object.fromEntries(serviceData.entries())
 
   const response = await fetch(`${BASE_URL}/services`, {

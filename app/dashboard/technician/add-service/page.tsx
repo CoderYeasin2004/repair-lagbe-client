@@ -2,6 +2,7 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
   Wrench,
@@ -36,6 +37,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { createServices } from "@/lib/actions/services"
+import { toast } from "sonner"
 
 const CATEGORY_LABELS: Record<string, string> = {
   smartphone: "Smartphone",
@@ -57,6 +59,7 @@ type UploadImageError = {
 }
 
 const AddServicePage = () => {
+  const router = useRouter()
   const [title, setTitle] = useState("")
   const [category, setCategory] = useState("")
   const [description, setDescription] = useState("")
@@ -150,8 +153,13 @@ const AddServicePage = () => {
   try {
     const result = await createServices(serviceData)
 
+    toast.success("Service added successfully! Waiting for admin approval.")
+    router.push("/dashboard/technician/my-services")
     console.log("Service created successfully:", result)
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to create service."
+    toast.error(message)
     console.error("Failed to create service:", error)
   }
 }

@@ -6,7 +6,7 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <DashboardSidebar></DashboardSidebar>
-      <main>
+      <main className="flex-1 min-w-0 flex flex-col">
         <SidebarTrigger />
         {children}
       </main>

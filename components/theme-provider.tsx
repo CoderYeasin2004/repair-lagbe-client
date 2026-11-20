@@ -15,8 +15,8 @@ const ThemeProvider = ({
       disableTransitionOnChange
       {...props}
     >
-      <ThemeHotkey />
       {children}
+      <ThemeHotkey />
     </NextThemesProvider>
   )
 }

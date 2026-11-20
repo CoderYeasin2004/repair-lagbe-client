@@ -138,13 +138,18 @@ const AddServicePage = () => {
 
   const serviceData = new FormData()
 
-  serviceData.append("title", title)
-  serviceData.append("category", category)
-  serviceData.append("description", description)
-  serviceData.append("price", price)
-  serviceData.append("duration", duration)
-  serviceData.append("serviceMode", serviceMode)
-  serviceData.append("serviceArea", serviceArea)
+serviceData.append("title", title)
+serviceData.append("category", category)
+serviceData.append("description", description)
+serviceData.append("price", String(Number(price)))
+serviceData.append("duration", duration)
+serviceData.append("serviceMode", serviceMode)
+serviceData.append("serviceArea", serviceArea)
+serviceData.append("createdAt", new Date().toISOString())
+
+if (uploadedImageUrl) {
+  serviceData.append("imageUrl", uploadedImageUrl)
+}
 
   if (uploadedImageUrl) {
     serviceData.append("imageUrl", uploadedImageUrl)

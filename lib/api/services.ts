@@ -47,3 +47,16 @@ export const getMyBookings = async (customerEmail: string) => {
 
   return response.json()
 }
+
+export const getMyBookingCounts = async (email: string) => {
+  const response = await fetch(
+    `${BASE_URL}/bookings/count?userid=${encodeURIComponent(email)}`,
+    { cache: "no-store" }
+  );
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch booking counts");
+  }
+
+  return response.json();
+};

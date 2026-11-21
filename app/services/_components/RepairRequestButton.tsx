@@ -8,12 +8,12 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -34,7 +34,7 @@ export function RepairRequestButton({
   const router = useRouter()
   const { data: session, isPending } = useSession()
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
@@ -56,7 +56,7 @@ export function RepairRequestButton({
     return
   }
 
-  setIsDialogOpen(true)
+  setIsSheetOpen(true)
 }
 
   const handleSubmit = async (
@@ -88,7 +88,7 @@ export function RepairRequestButton({
     })
 
     toast.success("Repair request submitted successfully!")
-    setIsDialogOpen(false)
+    setIsSheetOpen(false)
     router.push("/dashboard/customer/my-bookings")
   } catch (error) {
     toast.error(
@@ -111,94 +111,102 @@ export function RepairRequestButton({
         Request Repair
       </Button>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Request a Repair</DialogTitle>
-            <DialogDescription>
-              Submit your repair request for {service.title}.
-            </DialogDescription>
-          </DialogHeader>
+      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+        <SheetContent
+          side="left"
+          className="gap-0 overflow-hidden p-0 data-[side=left]:w-full data-[side=left]:sm:max-w-[480px]"
+        >
+          <SheetHeader className="shrink-0 border-b border-border/60 pr-12">
+            <SheetTitle className="text-[#102A43]">
+              Request Repair
+            </SheetTitle>
+            <SheetDescription>
+              Fill in the details below and we&apos;ll get your
+              {" "}{service.title} fixed as soon as possible.
+            </SheetDescription>
+          </SheetHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Service</Label>
-              <Input value={service.title} readOnly />
-            </div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Service</Label>
+                <Input value={service.title} readOnly />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Customer Name</Label>
-              <Input value={session?.user.name ?? ""} readOnly />
-            </div>
+              <div className="space-y-2">
+                <Label>Customer Name</Label>
+                <Input value={session?.user.name ?? ""} readOnly />
+              </div>
 
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <Input value={session?.user.email ?? ""} readOnly />
-            </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input value={session?.user.email ?? ""} readOnly />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                value={phone}
-                onChange={(event) => setPhone(event.target.value)}
-                placeholder="Enter your phone number"
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="Enter your phone number"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Address</Label>
-              <Input
-                id="address"
-                value={address}
-                onChange={(event) => setAddress(event.target.value)}
-                placeholder="Enter your full address"
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  placeholder="Enter your full address"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="preferredDate">Preferred Date</Label>
-              <Input
-                id="preferredDate"
-                type="date"
-                min={new Date().toLocaleDateString("en-CA")}
-                value={preferredDate}
-                onChange={(event) => setPreferredDate(event.target.value)}
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="preferredDate">Preferred Date</Label>
+                <Input
+                  id="preferredDate"
+                  type="date"
+                  min={new Date().toLocaleDateString("en-CA")}
+                  value={preferredDate}
+                  onChange={(event) => setPreferredDate(event.target.value)}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="problemDescription">
-                Describe Your Problem
-              </Label>
-              <Textarea
-                id="problemDescription"
-                value={problemDescription}
-                onChange={(event) =>
-                  setProblemDescription(event.target.value)
-                }
-                placeholder="Describe the problem with your device..."
-                minLength={20}
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                Minimum 20 characters.
-              </p>
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="problemDescription">
+                  Describe Your Problem
+                </Label>
+                <Textarea
+                  id="problemDescription"
+                  value={problemDescription}
+                  onChange={(event) =>
+                    setProblemDescription(event.target.value)
+                  }
+                  placeholder="Describe the problem with your device..."
+                  minLength={20}
+                  required
+                />
+                <p className="text-xs text-muted-foreground">
+                  Minimum 20 characters.
+                </p>
+              </div>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-[#167D9A] hover:bg-[#102A43]"
-            >
-              {isSubmitting ? "Submitting..." : "Submit Repair Request"}
-            </Button>
-          </form>
-        </DialogContent>
-      </Dialog>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full bg-[#167D9A] hover:bg-[#102A43]"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Repair Request"}
+              </Button>
+            </form>
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   )
 }

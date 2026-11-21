@@ -19,7 +19,6 @@ export const getServices = async (query = "") => {
 }
 
 
-
 export const getServiceById = async (serviceId: string) => {
   const response = await fetch(`${BASE_URL}/services/${serviceId}`, {
     cache: "no-store",
@@ -32,3 +31,19 @@ export const getServiceById = async (serviceId: string) => {
   return response.json()
 }
 
+// Get customer's bookings
+export const getMyBookings = async (customerEmail: string) => {
+  const response = await fetch(
+    `${BASE_URL}/bookings?customerEmail=${encodeURIComponent(customerEmail)}`,
+    {
+      method: "GET",
+      cache: "no-store",
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch your bookings.")
+  }
+
+  return response.json()
+}

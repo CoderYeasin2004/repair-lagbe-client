@@ -32,10 +32,27 @@ const MyBookingsPage = () => {
   setReloadToken((previousToken) => previousToken + 1)
 }
 
-const handlePayNow = (bookingId: string) => {
-  console.log("Pay Now clicked:", bookingId)
-}
+const handlePayNow = async (bookingId: string) => {
+  try {
+    const response = await fetch("/api/checkout_sessions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ bookingId }),
+    })
 
+    const result = await response.json()
+
+    if (!response.ok) {
+      throw new Error(result.error || "Checkout failed")
+    }
+
+    window.location.href = result.url
+  } catch (error) {
+    console.error("Payment error:", error)
+  }
+}
 
  useEffect(() => {
   if (!customerEmail) return

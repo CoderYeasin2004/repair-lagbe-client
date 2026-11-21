@@ -144,12 +144,6 @@ export const BookingCard = ({
         </Badge>
       </div>
 
-      {String(booking.status ?? booking.bookingStatus).toLowerCase() ===
-        "completed" &&
-        String(booking.paymentStatus).toLowerCase() === "unpaid" && (
-          <PayNowButton bookingId={booking._id} onPayNow={onPayNow} />
-        )}
-
       <CardContent className="flex flex-1 flex-col gap-4 px-5 pt-5 pb-5">
         <div>
           <h3 className="line-clamp-2 text-lg font-bold text-[#102A43]">
@@ -205,6 +199,11 @@ export const BookingCard = ({
             <StatusBadge statusDisplay={paymentStatusDisplay} />
           </div>
         </div>
+        {String(booking.status ?? booking.bookingStatus).toLowerCase() ===
+          "completed" &&
+          String(booking.paymentStatus).toLowerCase() === "unpaid" && (
+            <PayNowButton bookingId={booking._id} onPayNow={onPayNow} />
+          )}
       </CardContent>
     </Card>
   )

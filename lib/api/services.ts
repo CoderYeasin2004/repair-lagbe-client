@@ -48,9 +48,12 @@ export const getMyBookings = async (customerEmail: string) => {
   return response.json()
 }
 
-export const getMyBookingCounts = async (email: string) => {
+export const getMyBookingCounts = async (
+  email: string,
+  role?: string
+) => {
   const response = await fetch(
-    `${BASE_URL}/bookings/count?userid=${encodeURIComponent(email)}`,
+    `${BASE_URL}/bookings/count?userid=${encodeURIComponent(email)}&role=${role || "customer"}`,
     { cache: "no-store" }
   );
 

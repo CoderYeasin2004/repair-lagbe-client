@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge"
 import { DeleteDialouge } from "../../../components/DeleteDialouge"
 import { cn } from "@/lib/utils"
 import { getServices } from "@/lib/api/services"
+import { getSession } from "@/lib/core/server"
 
 type ServiceCategory =
   | "smartphone"
@@ -103,37 +104,30 @@ const getAvailabilityConfig = (availability: Availability) => {
 
 const formatPrice = (price: number) => `৳${price}`
 
-const handleView = (id: string) => {
-  // UI-only action placeholder
-  console.log(`View service: ${id}`)
-}
-
 const handleEdit = (id: string) => {
   // UI-only action placeholder
   console.log(`Edit service: ${id}`)
 }
 
 const ServiceCard = ({ service }: { service: Service }) => {
-  const approval = getApprovalConfig(
-  service.approvalStatus ?? "pending"
-)
+  const approval = getApprovalConfig(service.approvalStatus ?? "pending")
 
-const availability = getAvailabilityConfig(
-  service.availability ?? "available"
-)
+  const availability = getAvailabilityConfig(
+    service.availability ?? "available"
+  )
   const categoryLabel = CATEGORY_LABELS[service.category]
   const modeLabel = MODE_LABELS[service.serviceMode]
 
   return (
-    <Card className="overflow-hidden hover:shadow-sm transition-shadow">
+    <Card className="overflow-hidden transition-shadow hover:shadow-sm">
       <div className="relative h-48 overflow-hidden">
-       {service.imageUrl ? (
-  <img src={service.imageUrl} alt={service.title} />
-) : (
-  <div className="flex h-48 items-center justify-center bg-slate-100">
-    <Wrench className="h-12 w-12 text-slate-400" />
-  </div>
-)}
+        {service.imageUrl ? (
+          <img src={service.imageUrl} alt={service.title} />
+        ) : (
+          <div className="flex h-48 items-center justify-center bg-slate-100">
+            <Wrench className="h-12 w-12 text-slate-400" />
+          </div>
+        )}
         <div className="absolute top-3 right-3">
           <Badge variant="outline" className={approval.className}>
             {approval.label}
@@ -141,13 +135,13 @@ const availability = getAvailabilityConfig(
         </div>
       </div>
 
-      <CardContent className="p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+      <CardContent className="space-y-4 p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h3 className="font-semibold text-[#102A43] leading-snug">
+            <h3 className="leading-snug font-semibold text-[#102A43]">
               {service.title}
             </h3>
-            <Badge variant="outline" className="text-xs mt-1">
+            <Badge variant="outline" className="mt-1 text-xs">
               {categoryLabel}
             </Badge>
           </div>
@@ -177,20 +171,25 @@ const availability = getAvailabilityConfig(
       </CardContent>
 
       <CardFooter>
-  <div className="flex items-center gap-2">
-    <Button variant="outline" size="sm">
-      <Eye className="size-3.5" />
-      View
-    </Button>
+        <div className="flex w-full items-center justify-end gap-2">
+  <Link href={`/services/${service._id}`}>
+  <Button variant="outline" size="sm">
+    <Eye className="size-3.5" />
+    View Details
+  </Button>
+</Link>
 
-    <Button variant="outline" size="sm">
-      <Edit className="size-3.5" />
-      Edit
-    </Button>
+  <Button variant="outline" size="sm">
+    <Edit className="size-3.5" />
+    Edit
+  </Button>
 
-    <DeleteDialouge serviceId={service._id} serviceTitle={service.title} />
-  </div>
-</CardFooter>
+  <DeleteDialouge
+    serviceId={service._id}
+    serviceTitle={service.title}
+  />
+</div>
+      </CardFooter>
     </Card>
   )
 }
@@ -223,15 +222,13 @@ const SummaryCard = ({
 
 const EmptyState = () => (
   <Card className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="flex size-16 items-center justify-center rounded-xl bg-[#167D9A]/10 text-[#167D9A] mb-4">
+    <div className="mb-4 flex size-16 items-center justify-center rounded-xl bg-[#167D9A]/10 text-[#167D9A]">
       <WrenchIcon className="size-8" />
     </div>
-    <h3 className="text-lg font-semibold text-[#102A43]">
-      No services yet
-    </h3>
-    <p className="mt-1 text-muted-foreground max-w-xs text-center">
-      You haven&lsquo;t listed any repair services yet. Add your first service to
-      start receiving customer requests.
+    <h3 className="text-lg font-semibold text-[#102A43]">No services yet</h3>
+    <p className="mt-1 max-w-xs text-center text-muted-foreground">
+      You haven&lsquo;t listed any repair services yet. Add your first service
+      to start receiving customer requests.
     </p>
     <Link href="/dashboard/technician/add-service">
       <Button className="mt-6 bg-[#167D9A] text-white shadow-sm hover:bg-[#0f5f7a]">
@@ -242,7 +239,14 @@ const EmptyState = () => (
 )
 
 export default async function MyServicesPage() {
-  const servicesData = await getServices()
+  const userSession = await getSession()
+  const technicianEmail = userSession?.user?.email
+
+  const servicesData = technicianEmail
+    ? await getServices(
+        `technicianEmail=${encodeURIComponent(technicianEmail)}`
+      )
+    : []
 
   const services: Service[] = servicesData
 
@@ -259,12 +263,9 @@ export default async function MyServicesPage() {
 
   const hasServices = services.length > 0
 
-
-
-
   return (
     <div className="min-h-screen bg-[#F5F7FA]">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-8">
           <nav className="mb-4 flex items-center gap-1 text-sm text-muted-foreground">
@@ -299,7 +300,7 @@ export default async function MyServicesPage() {
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        <div className="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <SummaryCard
             icon={LayoutDashboard}
             label="Total Services"
@@ -324,22 +325,19 @@ export default async function MyServicesPage() {
 
         {/* Service Management */}
         <section>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-6">
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h2 className="text-xl font-bold text-[#102A43]">
                 Your Services
-                
               </h2>
               <p className="text-muted-foreground">
                 All your listed services and their current status.
               </p>
             </div>
-
-             
           </div>
 
           {hasServices ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {services.map((service) => (
                 <ServiceCard key={service._id} service={service} />
               ))}

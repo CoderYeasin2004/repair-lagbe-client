@@ -45,7 +45,6 @@ export const createBooking = async (bookingData: {
   return response.json()
 }
 
-
  
 
 export const deleteService = async (serviceId: string) => {

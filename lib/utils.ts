@@ -1,6 +1,6 @@
 
 export { cn } from "cn"
-
+export type { CustomerBooking } from "./types/bookings"
 import type {
   BookingServiceSummary,
   CustomerBooking,

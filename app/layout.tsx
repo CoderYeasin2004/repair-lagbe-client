@@ -8,6 +8,9 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
+import Footer from "@/components/footer"
+
+
 
 const geist = Geist({
   subsets: ["latin"],
@@ -41,27 +44,30 @@ const RootLayout = ({
 }: Readonly<{
   children: ReactNode
 }>) => {
-  return (
-    <html
-      lang="en"
-      suppressHydrationWarning
-      className={cn(
-        "antialiased",
-        fontMono.variable,
-        "font-sans",
-        geist.variable
-      )}
-    >
-      <body>
-        <ThemeProvider>
-          <Navbar />
-          {children}
-        </ThemeProvider>
+ 
+return (
+  <html
+    lang="en"
+    suppressHydrationWarning
+    className={cn(
+      "antialiased",
+      fontMono.variable,
+      "font-sans",
+      geist.variable
+    )}
+  >
+    <body>
+      <ThemeProvider>
+        <Navbar />
+        {children}
+        <Footer />
+      </ThemeProvider>
 
-        <Toaster />
-      </body>
-    </html>
-  )
+      <Toaster />
+    </body>
+  </html>
+)
+
 }
 
 export default RootLayout

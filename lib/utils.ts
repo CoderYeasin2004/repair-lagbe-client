@@ -1,201 +1,89 @@
+
 export { cn } from "cn"
 
-/* -------------------------- My Bookings types -------------------------- */
+import type {
+  BookingServiceSummary,
+  CustomerBooking,
+  BookingSummaryMetrics,
+  StatusDisplay,
+  StatusTone,
+} from "@/lib/types/bookings"
 
-export interface BookingServiceSummary {
-  _id?: string
-  title?: string
-  category?: string
-  price?: number | string
-  imageUrl?: string
-  technicianName?: string
+// Status colors
+export function getStatusTone(status: string): StatusTone {
+  switch (status) {
+    case "requested":
+      return "amber"
+    case "accepted":
+      return "teal"
+    case "in-progress":
+      return "navy"
+    case "completed":
+      return "green"
+    case "rejected":
+    case "cancelled":
+      return "red"
+    default:
+      return "navy"
+  }
 }
 
-export interface CustomerBooking {
-  _id: string
-  serviceTitle?: string
-  serviceImage?: string
-  category?: string
-  basePrice?: number | string
-  finalAmount?: number | string
-  service?: BookingServiceSummary | null
-  serviceId?: string | BookingServiceSummary | null
-  preferredDate?: string
-  status?: string
-  bookingStatus?: string
-  paymentStatus?: string
-  technicianName?: string
-  createdAt?: string
+// Status labels
+export function getStatusLabel(status: string): string {
+  switch (status) {
+    case "requested":
+      return "Requested"
+    case "accepted":
+      return "Accepted"
+    case "in-progress":
+      return "In Progress"
+    case "completed":
+      return "Completed"
+    case "rejected":
+      return "Rejected"
+    case "cancelled":
+      return "Cancelled"
+    default:
+      return "Unknown"
+  }
 }
 
-export interface MyBookingsApiResponse {
-  success: boolean
-  totalBookings: number
-  bookings: CustomerBooking[]
-}
-
-export interface StatusDisplay {
-  label: string
-  tone: StatusTone
-}
-
-export interface BookingSummaryMetrics {
-  total: number
-  requested: number
-  inProgress: number
-  completed: number
-}
-
-export type StatusTone = "navy" | "teal" | "amber" | "green" | "red"
-
-/* -------------------------- My Bookings constants -------------------------- */
-
-export const CATEGORY_LABELS: Record<string, string> = {
-  smartphone: "Smartphone",
-  "laptop-pc": "Laptop & PC",
-  ac: "AC",
-  refrigerator: "Refrigerator",
-  tv: "TV",
-  "washing-machine": "Washing Machine",
-  electrical: "Electrical",
-}
-
+// Status badge classes
 export const STATUS_TONE_CLASSES: Record<StatusTone, string> = {
-  navy: "border-[#102A43]/20 bg-[#102A43]/10 text-[#102A43]",
-  teal: "border-[#167D9A]/25 bg-[#167D9A]/10 text-[#167D9A]",
-  amber: "border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#B45309]",
-  green: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  navy: "border-blue-200 bg-blue-50 text-blue-700",
+  teal: "border-teal-200 bg-teal-50 text-teal-700",
+  amber: "border-amber-200 bg-amber-50 text-amber-700",
+  green: "border-green-200 bg-green-50 text-green-700",
   red: "border-red-200 bg-red-50 text-red-700",
 }
 
-const BOOKING_STATUS_CONFIG: Record<string, StatusDisplay> = {
-  requested: { label: "Requested", tone: "amber" },
-  pending: { label: "Pending", tone: "amber" },
-  accepted: { label: "Accepted", tone: "teal" },
-  assigned: { label: "Assigned", tone: "teal" },
-  confirmed: { label: "Confirmed", tone: "teal" },
-  "in-progress": { label: "In Progress", tone: "teal" },
-  processing: { label: "In Progress", tone: "teal" },
-  completed: { label: "Completed", tone: "green" },
-  done: { label: "Completed", tone: "green" },
-  cancelled: { label: "Cancelled", tone: "red" },
-  rejected: { label: "Rejected", tone: "red" },
-}
+// Booking status display
+export function getBookingStatusDisplay(status?: string): StatusDisplay {
+  const currentStatus = status || "requested"
 
-const PAYMENT_STATUS_CONFIG: Record<string, StatusDisplay> = {
-  paid: { label: "Paid", tone: "green" },
-  pending: { label: "Pending", tone: "amber" },
-  unpaid: { label: "Unpaid", tone: "red" },
-  partial: { label: "Partially Paid", tone: "teal" },
-  refunded: { label: "Refunded", tone: "navy" },
-}
-
-const DEFAULT_BOOKING_STATUS: StatusDisplay = {
-  label: "Requested",
-  tone: "amber",
-}
-
-const DEFAULT_PAYMENT_STATUS: StatusDisplay = {
-  label: "Unpaid",
-  tone: "red",
-}
-
-const REQUESTED_STATUS_KEYS = ["requested", "pending"]
-
-const IN_PROGRESS_STATUS_KEYS = [
-  "in-progress",
-  "assigned",
-  "accepted",
-  "confirmed",
-  "processing",
-]
-
-const COMPLETED_STATUS_KEYS = ["completed", "done"]
-
-/* -------------------------- My Bookings helpers -------------------------- */
-
-export const normalizeStatusKey = (statusValue?: string): string =>
-  statusValue?.trim().toLowerCase().replace(/[\s_]+/g, "-") ?? ""
-
-export const resolveServiceSummary = (
-  booking: CustomerBooking
-): BookingServiceSummary | null => {
-  if (booking.service && typeof booking.service === "object") {
-    return booking.service
+  return {
+    label: getStatusLabel(currentStatus),
+    tone: getStatusTone(currentStatus),
   }
+}
 
-  if (booking.serviceId && typeof booking.serviceId === "object") {
-    return booking.serviceId
+// Payment status display
+export function getPaymentStatusDisplay(
+  paymentStatus?: string
+): StatusDisplay {
+  const isPaid = paymentStatus === "paid"
+
+  return {
+    label: isPaid ? "Paid" : "Unpaid",
+    tone: isPaid ? "green" : "amber",
   }
-
-  // Supports the current MongoDB booking document structure.
-  if (booking.serviceTitle || booking.serviceImage || booking.category) {
-    return {
-      title: booking.serviceTitle,
-      category: booking.category,
-      imageUrl: booking.serviceImage,
-      price: booking.finalAmount ?? booking.basePrice,
-      technicianName: booking.technicianName,
-    }
-  }
-
-  return null
 }
 
-export const resolveTechnicianName = (
-  booking: CustomerBooking
-): string | null => {
-  const serviceSummary = resolveServiceSummary(booking)
-  const technicianName =
-    booking.technicianName ?? serviceSummary?.technicianName
+// Format booking date
+export function formatBookingDate(date?: string): string {
+  if (!date) return "—"
 
-  return technicianName || null
-}
-
-export const resolveBookingStatus = (
-  booking: CustomerBooking
-): string | undefined => booking.status ?? booking.bookingStatus
-
-export const getBookingStatusDisplay = (
-  booking: CustomerBooking
-): StatusDisplay => {
-  const statusKey = normalizeStatusKey(resolveBookingStatus(booking))
-
-  if (!statusKey) return DEFAULT_BOOKING_STATUS
-
-  return (
-    BOOKING_STATUS_CONFIG[statusKey] ?? {
-      label: resolveBookingStatus(booking) ?? "Unknown",
-      tone: "navy",
-    }
-  )
-}
-
-export const getPaymentStatusDisplay = (
-  booking: CustomerBooking
-): StatusDisplay => {
-  const statusKey = normalizeStatusKey(booking.paymentStatus)
-
-  if (!statusKey) return DEFAULT_PAYMENT_STATUS
-
-  return (
-    PAYMENT_STATUS_CONFIG[statusKey] ?? {
-      label: booking.paymentStatus ?? "Unknown",
-      tone: "navy",
-    }
-  )
-}
-
-export const getCategoryLabel = (category?: string): string => {
-  if (!category) return "Service"
-
-  return CATEGORY_LABELS[category.toLowerCase()] ?? category
-}
-
-export const formatBookingDate = (dateValue?: string): string => {
-  if (!dateValue) return "—"
-
-  const parsedDate = new Date(dateValue)
+  const parsedDate = new Date(date)
 
   if (Number.isNaN(parsedDate.getTime())) return "—"
 
@@ -207,27 +95,66 @@ export const formatBookingDate = (dateValue?: string): string => {
   })
 }
 
-export const formatPrice = (price?: number | string): string => {
-  const numericPrice = Number(price)
+// Format price in BDT
+export function formatPrice(price?: number | string): string {
+  const amount = Number(price)
 
-  if (!Number.isFinite(numericPrice)) return "৳—"
+  if (!Number.isFinite(amount)) return "৳0"
 
-  return `৳${numericPrice.toLocaleString("en-BD")}`
+  return `৳${amount.toLocaleString("en-BD")}`
 }
 
-const countBookingsWithStatus = (
-  bookings: CustomerBooking[],
-  statusKeys: string[]
-): number =>
-  bookings.filter((booking) =>
-    statusKeys.includes(normalizeStatusKey(resolveBookingStatus(booking)))
-  ).length
+// Category label
+export function getCategoryLabel(category?: string): string {
+  if (!category) return "General"
 
-export const calculateSummaryMetrics = (
+  return category
+    .split(/[\s&_-]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+// Resolve service summary
+export function resolveServiceSummary(
+  booking: CustomerBooking
+): BookingServiceSummary {
+  const nestedService =
+    booking.service ||
+    (typeof booking.serviceId === "object" ? booking.serviceId : null)
+
+  return {
+    _id: nestedService?._id,
+    title: booking.serviceTitle || nestedService?.title || "Unknown Service",
+    category: booking.category || nestedService?.category || "General",
+    price: booking.finalAmount ?? booking.basePrice ?? nestedService?.price ?? 0,
+    imageUrl: booking.serviceImage || nestedService?.imageUrl,
+    technicianName:
+      booking.technicianName || nestedService?.technicianName,
+  }
+}
+
+// Resolve technician name
+export function resolveTechnicianName(
+  booking: CustomerBooking
+): string {
+  return booking.technicianName || booking.service?.technicianName || "Unknown Technician"
+}
+
+// Dashboard summary metrics
+export function calculateSummaryMetrics(
   bookings: CustomerBooking[]
-): BookingSummaryMetrics => ({
-  total: bookings.length,
-  requested: countBookingsWithStatus(bookings, REQUESTED_STATUS_KEYS),
-  inProgress: countBookingsWithStatus(bookings, IN_PROGRESS_STATUS_KEYS),
-  completed: countBookingsWithStatus(bookings, COMPLETED_STATUS_KEYS),
-})
+): BookingSummaryMetrics {
+  return {
+    total: bookings.length,
+    requested: bookings.filter(
+      (booking) => booking.status === "requested"
+    ).length,
+    inProgress: bookings.filter(
+      (booking) => booking.status === "in-progress"
+    ).length,
+    completed: bookings.filter(
+      (booking) => booking.status === "completed"
+    ).length,
+  }
+}

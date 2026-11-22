@@ -32,20 +32,29 @@ export const getServiceById = async (serviceId: string) => {
 }
 
 // Get customer's bookings
-export const getMyBookings = async (customerEmail: string) => {
+export const getMyBookings = async (
+  email: string,
+  role: "customer" | "technician" = "customer"
+) => {
+  const queryKey = role === "technician"
+    ? "technicianEmail"
+    : "customerEmail"
+
   const response = await fetch(
-    `${BASE_URL}/bookings?customerEmail=${encodeURIComponent(customerEmail)}`,
+    `${BASE_URL}/bookings?${queryKey}=${encodeURIComponent(email)}`,
     {
       method: "GET",
       cache: "no-store",
     }
   )
 
+  const result = await response.json()
+
   if (!response.ok) {
-    throw new Error("Failed to fetch your bookings.")
+    throw new Error(result.message || "Failed to fetch bookings")
   }
 
-  return response.json()
+  return result
 }
 
 export const getMyBookingCounts = async (
@@ -63,3 +72,5 @@ export const getMyBookingCounts = async (
 
   return response.json();
 };
+
+

@@ -172,12 +172,7 @@ const ServiceCard = ({ service }: { service: Service }) => {
 
       <CardFooter>
         <div className="flex w-full items-center justify-end gap-2">
-  <Link href={`/services/${service._id}`}>
-  <Button variant="outline" size="sm">
-    <Eye className="size-3.5" />
-    View Details
-  </Button>
-</Link>
+
 
   <Button variant="outline" size="sm">
     <Edit className="size-3.5" />

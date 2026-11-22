@@ -60,3 +60,29 @@ export const deleteService = async (serviceId: string) => {
 
   return result
 }
+
+
+export const updateBookingStatus = async (
+  bookingId: string,
+  status: string,
+  finalAmount?: number
+) => {
+  const res = await fetch(`${BASE_URL}/bookings/${bookingId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      status,
+      ...(finalAmount !== undefined && { finalAmount }),
+    }),
+  })
+
+  const result = await res.json()
+
+  if (!res.ok) {
+    throw new Error(result.message || "Failed to update booking status")
+  }
+
+  return result
+}

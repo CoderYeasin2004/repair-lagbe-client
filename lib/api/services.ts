@@ -1,3 +1,6 @@
+'use server'
+import { authFetch } from "../core/server"
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"
 
@@ -40,7 +43,7 @@ export const getMyBookings = async (
     ? "technicianEmail"
     : "customerEmail"
 
-  const response = await fetch(
+  const response = await authFetch(
     `${BASE_URL}/bookings?${queryKey}=${encodeURIComponent(email)}`,
     {
       method: "GET",
@@ -61,16 +64,18 @@ export const getMyBookingCounts = async (
   email: string,
   role?: string
 ) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${BASE_URL}/bookings/count?userid=${encodeURIComponent(email)}&role=${role || "customer"}`,
-    { cache: "no-store" }
-  );
+    {
+      method: "GET",
+      cache: "no-store",
+    }
+  )
 
   if (!response.ok) {
-    throw new Error("Failed to fetch booking counts");
+    throw new Error("Failed to fetch booking counts")
   }
 
-  return response.json();
-};
-
+  return response.json()
+}
 

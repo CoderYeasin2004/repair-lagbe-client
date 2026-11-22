@@ -1,10 +1,14 @@
+'use server'
+import { authFetch } from "../core/server"
+
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"
 
-export const createServices = async  (serviceData: FormData) => {
+
+export const createServices = async (serviceData: FormData) => {
   const serviceObject = Object.fromEntries(serviceData.entries())
 
-  const response = await fetch(`${BASE_URL}/services`, {
+  const response = await authFetch(`${BASE_URL}/services`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -29,7 +33,7 @@ export const createBooking = async (bookingData: {
   preferredDate: string
   problemDescription: string
 }) => {
-  const response = await fetch(`${BASE_URL}/bookings`, {
+  const response = await authFetch(`${BASE_URL}/bookings`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -48,7 +52,7 @@ export const createBooking = async (bookingData: {
  
 
 export const deleteService = async (serviceId: string) => {
-  const response = await fetch(`${BASE_URL}/services/${serviceId}`, {
+  const response = await authFetch(`${BASE_URL}/services/${serviceId}`, {
     method: "DELETE",
   })
 
@@ -67,7 +71,7 @@ export const updateBookingStatus = async (
   status: string,
   finalAmount?: number
 ) => {
-  const res = await fetch(`${BASE_URL}/bookings/${bookingId}`, {
+  const res = await authFetch(`${BASE_URL}/bookings/${bookingId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",

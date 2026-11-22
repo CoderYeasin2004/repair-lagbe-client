@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
-import { useCallback, useState, useRef, useEffect } from "react"
+import { useCallback, useState, useEffect } from "react"
 import {
   Wrench,
   Sun,
@@ -80,20 +80,24 @@ export const Navbar = () => {
   const currentUser = session?.user ?? null
   const isLoggedIn = !!currentUser
 
-  const hasShownLoginToast = useRef(false)
+  // Check localStorage to ensure welcome toast only shows once per login session
+  // Use browser detection for SSR compatibility
+  const storage = typeof window !== "undefined" ? window.localStorage : null
 
   useEffect(() => {
     if (isPending) return
 
-    if (isLoggedIn && !hasShownLoginToast.current) {
-      toast.success(`Welcome back, ${currentUser.name}!`)
-      hasShownLoginToast.current = true
+    const hasShownLoginToast = storage?.getItem("welcomeToastShown") === "true"
+
+    if (isLoggedIn && !hasShownLoginToast) {
+      toast.success(`Welcome back, ${currentUser.name!}`)
+      storage?.setItem("welcomeToastShown", "true")
     }
 
     if (!isLoggedIn) {
-      hasShownLoginToast.current = false
+      storage?.removeItem("welcomeToastShown")
     }
-  }, [isPending, isLoggedIn, currentUser?.name])
+  }, [isPending, isLoggedIn, currentUser?.name, storage])
 
   const handleSignOut = async () => {
     await signOut()

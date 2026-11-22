@@ -30,14 +30,6 @@ const UnauthorizedPage = () => {
             <Home className="mr-2 size-4" />
             Back to Home
           </Link>
-
-          <Link
-            href="/dashboard"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-[#102A43] transition-colors hover:bg-slate-100"
-          >
-            <ArrowLeft className="mr-2 size-4" />
-            Dashboard
-          </Link>
         </div>
 
         <p className="mt-8 text-xs text-slate-400">

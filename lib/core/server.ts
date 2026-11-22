@@ -8,8 +8,39 @@ export const getSession = async () => {
     headers: await headers(),
   })
 return session;
-
 }
+
+export const getToken = async () => {
+  const session = await getSession()
+  if(!session || !session.session?.token){
+    redirect('/unauthorized')
+  }
+  return session.session.token
+} 
+
+
+
+export const authFetch = async (
+  api: string,
+  options: RequestInit = {}
+) => {
+  const token = await getToken()
+  console.log("Auth Token:", token)
+
+  const res = await fetch(api, {
+    ...options,
+    headers: {
+      ...options.headers,
+      authorization: `Bearer ${token}`,
+    },
+  })
+
+  return res
+}
+
+
+
+
 export const requireRole = async (role: string) =>{
   const session = await getSession();
   if(!session || session?.user.role !== role){

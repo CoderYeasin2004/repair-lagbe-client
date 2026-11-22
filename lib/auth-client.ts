@@ -6,7 +6,10 @@ import { adminClient } from "better-auth/client/plugins"
 
 export const authClient = createAuthClient({
   baseURL: process.env.BETTER_AUTH_URL,
-  plugins: [inferAdditionalFields<typeof auth>(), adminClient()],
+  plugins: [inferAdditionalFields<typeof auth>()],
 })
 
 export const { signIn, signUp, signOut, useSession } = authClient
+
+
+// , adminClient()

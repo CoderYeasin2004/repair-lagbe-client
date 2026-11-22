@@ -1,7 +1,10 @@
+'use server'
+
 import type { IPaidBooking } from "@/lib/types/bookings"
 import { headers } from "next/headers";
 import { auth } from "../auth";
 import type { User } from "@/lib/types/user"
+import { authFetch } from "../core/server";
 
 
 const BASE_URL =
@@ -29,7 +32,7 @@ export const getUsers = async (): Promise<{ users: User[] }> => {
 export const getPaidBookingById = async (
   bookingId: string
 ): Promise<IPaidBooking> => {
-  const response = await fetch(
+  const response = await authFetch(
     `${BASE_URL}/bookings/${bookingId}/paid`,
     { cache: "no-store" }
   )

@@ -1,6 +1,13 @@
 
 export { cn } from "cn"
 export type { CustomerBooking } from "./types/bookings"
+export type {
+  BookingServiceSummary,
+  BookingSummaryMetrics,
+  StatusDisplay,
+  StatusTone,
+} from "@/lib/types/bookings"
+
 import type {
   BookingServiceSummary,
   CustomerBooking,

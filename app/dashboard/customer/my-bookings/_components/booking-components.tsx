@@ -95,7 +95,7 @@ const BookingServiceImage = ({ src, alt }: { src?: string; alt: string }) => {
   const showFallback = !src || hasImageError
 
   return (
-    <div className="flex aspect-[16/10] w-full items-center justify-center overflow-hidden bg-slate-100">
+    <div className="flex aspect-16/10 w-full items-center justify-center overflow-hidden bg-slate-100">
       {showFallback ? (
         <div className="flex flex-col items-center gap-2 text-slate-400">
           <Wrench className="size-10" />
@@ -125,8 +125,8 @@ export const BookingCard = ({
   const serviceSummary = resolveServiceSummary(booking)
   const serviceTitle = serviceSummary?.title ?? "Untitled Service"
   const technicianName = resolveTechnicianName(booking)
-  const bookingStatusDisplay = getBookingStatusDisplay(booking)
-  const paymentStatusDisplay = getPaymentStatusDisplay(booking)
+  const bookingStatusDisplay = getBookingStatusDisplay(booking.status ?? booking.bookingStatus)
+  const paymentStatusDisplay = getPaymentStatusDisplay(booking.paymentStatus)
 
   const servicePrice =
     booking.finalAmount ?? booking.basePrice ?? serviceSummary?.price

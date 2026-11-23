@@ -45,3 +45,19 @@ export const getPaidBookingById = async (
 
   return data
 }
+
+
+export const getAdminStats = async () => {
+  const response = await protectedMutation(
+    `${BASE_URL}/admin/stats`,
+    "GET"
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch admin stats");
+  }
+
+  return data;
+};

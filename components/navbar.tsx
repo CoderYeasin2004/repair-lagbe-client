@@ -134,6 +134,11 @@ export const Navbar = () => {
         .slice(0, 2)
     : "?"
 
+  // Avatar image URL from session, fallback to initials
+  const avatarImage = currentUser?.image
+    ? currentUser.image
+    : null
+
   const navLinks = isDashboard ? null : (
     <div className="flex items-center gap-8">
       {NAV_LINKS.map((link) => {
@@ -192,9 +197,17 @@ export const Navbar = () => {
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <div className="shrink-0">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#167D9A]/10 text-sm font-medium text-[#167D9A]">
-                {userInitials}
-              </div>
+              {avatarImage ? (
+                <img
+                  src={avatarImage}
+                  alt={`${currentUser?.name} profile`}
+                  className="h-10 w-10 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#167D9A]/10 text-sm font-medium text-[#167D9A]">
+                  {userInitials}
+                </div>
+              )}
             </div>
 
             <div className="min-w-0 flex-1">

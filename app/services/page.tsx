@@ -27,7 +27,8 @@ interface IService {
   category: string
   description: string
   imageUrl?: string
-  price: string | number
+  price?: string | number
+  basePrice?: string | number
   duration: string
   serviceMode: string
   serviceArea: string
@@ -215,7 +216,7 @@ const ServicesPage = async ({
                       <div>
                         <p className="text-xs text-slate-500">Starting price</p>
                         <p className="mt-1 text-xl font-bold text-[#102A43]">
-                          ৳{Number(service.price).toLocaleString("en-BD")}
+                          ৳{Number(service.basePrice ?? service.price ?? 0).toLocaleString("en-BD")}
                         </p>
                       </div>
 

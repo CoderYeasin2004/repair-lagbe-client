@@ -1,7 +1,8 @@
-"use client"
 
-import { useState } from "react"
-import Link from "next/link"
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
 import {
   AlertCircle,
   ArrowRight,
@@ -13,14 +14,25 @@ import {
   UserRound,
   Wallet,
   Wrench,
+  Loader2,
+  XCircle,
   type LucideIcon,
-} from "lucide-react"
-import PayNowButton from "./pay-now-button"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { cn } from "@/lib/utils"
+} from "lucide-react";
+import { toast } from "sonner";
+
+import PayNowButton from "./pay-now-button";
+
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
+import { cn } from "@/lib/utils";
 
 import {
   calculateSummaryMetrics,
@@ -35,27 +47,33 @@ import {
   type CustomerBooking,
   type StatusDisplay,
   type StatusTone,
-} from "@/lib/utils"
+} from "@/lib/utils";
+import { cancelBooking } from "@/lib/actions/services";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 /* ------------------------------- Status Badge ------------------------------- */
 
-const StatusBadge = ({ statusDisplay }: { statusDisplay: StatusDisplay }) => (
+const StatusBadge = ({
+  statusDisplay,
+}: {
+  statusDisplay: StatusDisplay;
+}) => (
   <Badge
     variant="outline"
     className={cn("border", STATUS_TONE_CLASSES[statusDisplay.tone])}
   >
     {statusDisplay.label}
   </Badge>
-)
+);
 
 /* -------------------------------- Summary Card ------------------------------- */
 
 interface SummaryCardProps {
-  icon: LucideIcon
-  label: string
-  value: number
-  subtitle: string
-  tone: StatusTone
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  subtitle: string;
+  tone: StatusTone;
 }
 
 const SummaryCard = ({
@@ -86,13 +104,19 @@ const SummaryCard = ({
       <p className="mt-1 text-xs text-slate-500">{subtitle}</p>
     </CardContent>
   </Card>
-)
+);
 
 /* ----------------------------- Booking Service Image ----------------------------- */
 
-const BookingServiceImage = ({ src, alt }: { src?: string; alt: string }) => {
-  const [hasImageError, setHasImageError] = useState(false)
-  const showFallback = !src || hasImageError
+const BookingServiceImage = ({
+  src,
+  alt,
+}: {
+  src?: string;
+  alt: string;
+}) => {
+  const [hasImageError, setHasImageError] = useState(false);
+  const showFallback = !src || hasImageError;
 
   return (
     <div className="flex aspect-16/10 w-full items-center justify-center overflow-hidden bg-slate-100">
@@ -110,26 +134,59 @@ const BookingServiceImage = ({ src, alt }: { src?: string; alt: string }) => {
         />
       )}
     </div>
-  )
-}
+  );
+};
 
 /* -------------------------------- Booking Card -------------------------------- */
 
 export const BookingCard = ({
   booking,
   onPayNow,
+  onCancelled,
 }: {
-  booking: CustomerBooking
-  onPayNow: (bookingId: string) => void
+  booking: CustomerBooking;
+  onPayNow: (bookingId: string) => void;
+  onCancelled: () => void;
 }) => {
-  const serviceSummary = resolveServiceSummary(booking)
-  const serviceTitle = serviceSummary?.title ?? "Untitled Service"
-  const technicianName = resolveTechnicianName(booking)
-  const bookingStatusDisplay = getBookingStatusDisplay(booking.status ?? booking.bookingStatus)
-  const paymentStatusDisplay = getPaymentStatusDisplay(booking.paymentStatus)
+  const [isCancelling, setIsCancelling] = useState(false);
+
+  const serviceSummary = resolveServiceSummary(booking);
+  const serviceTitle = serviceSummary?.title ?? "Untitled Service";
+  const technicianName = resolveTechnicianName(booking);
+
+  const currentStatus = String(
+    booking.status ?? booking.bookingStatus
+  ).toLowerCase();
+
+  const bookingStatusDisplay = getBookingStatusDisplay(
+    booking.status ?? booking.bookingStatus
+  );
+
+  const paymentStatusDisplay = getPaymentStatusDisplay(
+    booking.paymentStatus
+  );
 
   const servicePrice =
-    booking.finalAmount ?? booking.basePrice ?? serviceSummary?.price
+    booking.finalAmount ?? booking.basePrice ?? serviceSummary?.price;
+
+  const handleCancel = async () => {
+  try {
+    setIsCancelling(true);
+
+    const result = await cancelBooking(booking._id);
+
+    toast.success(result.message || "Booking cancelled successfully");
+    onCancelled();
+  } catch (error) {
+    toast.error(
+      error instanceof Error
+        ? error.message
+        : "Failed to cancel booking"
+    );
+  } finally {
+    setIsCancelling(false);
+  }
+};
 
   return (
     <Card className="group flex h-full flex-col gap-0 overflow-hidden bg-white py-0 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:shadow-md">
@@ -199,15 +256,53 @@ export const BookingCard = ({
             <StatusBadge statusDisplay={paymentStatusDisplay} />
           </div>
         </div>
-        {String(booking.status ?? booking.bookingStatus).toLowerCase() ===
-          "completed" &&
+
+        {currentStatus === "completed" &&
           String(booking.paymentStatus).toLowerCase() === "unpaid" && (
-            <PayNowButton bookingId={booking._id} onPayNow={onPayNow} />
+            <PayNowButton
+              bookingId={booking._id}
+              onPayNow={onPayNow}
+            />
           )}
+
+        {currentStatus === "requested" && (
+          <AlertDialog>
+  <AlertDialogTrigger
+  className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 shadow-sm transition-all hover:border-red-300 hover:bg-red-100 hover:text-red-700 active:scale-[0.98]"
+>
+  <XCircle className="size-4" />
+  Cancel Booking
+</AlertDialogTrigger>
+
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>
+        Cancel This Booking?
+      </AlertDialogTitle>
+      <AlertDialogDescription>
+        Are you sure you want to cancel this booking?
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+
+    <AlertDialogFooter>
+      <AlertDialogCancel>
+        Keep Booking
+      </AlertDialogCancel>
+
+      <AlertDialogAction
+        onClick={handleCancel}
+        disabled={isCancelling}
+      >
+        {isCancelling ? "Cancelling..." : "Yes, Cancel Booking"}
+      </AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+        )}
       </CardContent>
     </Card>
-  )
-}
+  );
+};
 
 /* ------------------------------ Loading State ------------------------------ */
 
@@ -231,7 +326,7 @@ export const BookingsLoadingState = () => (
       ))}
     </div>
   </div>
-)
+);
 
 /* ------------------------------- Empty State ------------------------------- */
 
@@ -242,7 +337,9 @@ export const EmptyBookingsState = () => (
         <Inbox className="size-8 text-[#167D9A]" />
       </div>
 
-      <h2 className="mt-5 text-xl font-bold text-[#102A43]">No Bookings Yet</h2>
+      <h2 className="mt-5 text-xl font-bold text-[#102A43]">
+        No Bookings Yet
+      </h2>
 
       <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
         You haven&apos;t booked any repair services yet. Browse our services and
@@ -257,13 +354,13 @@ export const EmptyBookingsState = () => (
       </Link>
     </CardContent>
   </Card>
-)
+);
 
 /* -------------------------------- Error State -------------------------------- */
 
 interface BookingsErrorStateProps {
-  message: string
-  onRetry: () => void
+  message: string;
+  onRetry: () => void;
 }
 
 export const BookingsErrorState = ({
@@ -290,7 +387,7 @@ export const BookingsErrorState = ({
       </Button>
     </CardContent>
   </Card>
-)
+);
 
 /* ----------------------------- Sign In Required ----------------------------- */
 
@@ -316,20 +413,22 @@ export const SignInRequiredState = () => (
       </Link>
     </CardContent>
   </Card>
-)
+);
 
 /* ----------------------------- Booking Page Content ----------------------------- */
 
 interface BookingPageContentProps {
-  bookings: CustomerBooking[]
-  onPayNow: (bookingId: string) => void
+  bookings: CustomerBooking[];
+  onPayNow: (bookingId: string) => void;
+  onCancelled: () => void;
 }
 
 export const BookingPageContent = ({
   bookings,
   onPayNow,
+  onCancelled,
 }: BookingPageContentProps) => {
-  const summaryMetrics = calculateSummaryMetrics(bookings)
+  const summaryMetrics = calculateSummaryMetrics(bookings);
 
   return (
     <>
@@ -376,10 +475,11 @@ export const BookingPageContent = ({
               key={booking._id}
               booking={booking}
               onPayNow={onPayNow}
+              onCancelled={onCancelled}
             />
           ))}
         </div>
       )}
     </>
-  )
-}
+  );
+};

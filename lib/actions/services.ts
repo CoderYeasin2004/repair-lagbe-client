@@ -137,3 +137,22 @@ export const updateService = async (formData: FormData) => {
 
   return data;
 };
+
+export const cancelBooking = async (bookingId: string) => {
+  if (!bookingId) {
+    throw new Error("Booking ID is required");
+  }
+
+  const response = await protectedMutation(
+    `${BASE_URL}/bookings/${bookingId}/cancel`,
+    "PATCH"
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to cancel booking");
+  }
+
+  return data;
+};

@@ -1,109 +1,108 @@
-"use client"
 
-import Link from "next/link"
-import { useEffect, useState } from "react"
-import { useSession } from "@/lib/auth-client"
-import { getMyBookings } from "@/lib/api/services"
-import { Badge } from "@/components/ui/badge"
+"use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useSession } from "@/lib/auth-client";
+import { getMyBookings } from "@/lib/api/services";
+import { Badge } from "@/components/ui/badge";
 
 import {
   BookingPageContent,
   BookingsErrorState,
   BookingsLoadingState,
   SignInRequiredState,
-} from "./_components/booking-components"
+} from "./_components/booking-components";
 
-import type {
-  CustomerBooking,
-} from "@/lib/utils"
+import type { CustomerBooking } from "@/lib/utils";
 
 const MyBookingsPage = () => {
-  const { data: session, isPending } = useSession()
+  const { data: session, isPending } = useSession();
 
-  const [bookings, setBookings] = useState<CustomerBooking[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const [reloadToken, setReloadToken] = useState(0)
+  const [bookings, setBookings] = useState<CustomerBooking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [reloadToken, setReloadToken] = useState(0);
 
-  const customerEmail = session?.user?.email
+  const customerEmail = session?.user?.email;
 
   const handleRetry = () => {
-  setErrorMessage(null)
-  setReloadToken((previousToken) => previousToken + 1)
-}
+    setErrorMessage(null);
+    setReloadToken((previousToken) => previousToken + 1);
+  };
 
-const handlePayNow = async (bookingId: string) => {
-  try {
-    const response = await fetch("/api/checkout_sessions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ bookingId }),
-    })
-
-    const result = await response.json()
-
-    if (!response.ok) {
-      throw new Error(result.error || "Checkout failed")
-    }
-
-    window.location.href = result.url
-  } catch (error) {
-    console.error("Payment error:", error)
-  }
-}
-
- useEffect(() => {
-  if (!customerEmail) return
-
-  let isMounted = true
-
-  const fetchBookings = async () => {
+  const handlePayNow = async (bookingId: string) => {
     try {
-      setIsLoading(true)
-      setErrorMessage(null)
+      const response = await fetch("/api/checkout_sessions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ bookingId }),
+      });
 
-      const response = await getMyBookings(customerEmail)
+      const result = await response.json();
 
-      if (isMounted) {
-        const bookingList = Array.isArray(response?.bookings)
-          ? response.bookings
-          : []
-
-        setBookings(bookingList)
+      if (!response.ok) {
+        throw new Error(result.error || "Checkout failed");
       }
+
+      window.location.href = result.url;
     } catch (error) {
-      if (isMounted) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Failed to load bookings."
-        )
-      }
-    } finally {
-      if (isMounted) {
-        setIsLoading(false)
-      }
+      console.error("Payment error:", error);
     }
-  }
+  };
 
-  fetchBookings()
+  useEffect(() => {
+    if (!customerEmail) return;
 
-  return () => {
-    isMounted = false
-  }
-}, [customerEmail, reloadToken])
+    let isMounted = true;
 
-  const showLoading = isPending || (Boolean(customerEmail) && isLoading)
+    const fetchBookings = async () => {
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+
+        const response = await getMyBookings(customerEmail);
+
+        if (isMounted) {
+          const bookingList = Array.isArray(response?.bookings)
+            ? response.bookings
+            : [];
+
+          setBookings(bookingList);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Failed to load bookings."
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchBookings();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [customerEmail, reloadToken]);
+
+  const showLoading = isPending || (Boolean(customerEmail) && isLoading);
 
   const renderBookings = () => {
     if (showLoading) {
-      return <BookingsLoadingState />
+      return <BookingsLoadingState />;
     }
 
     if (!customerEmail) {
-      return <SignInRequiredState />
+      return <SignInRequiredState />;
     }
 
     if (errorMessage) {
@@ -112,11 +111,17 @@ const handlePayNow = async (bookingId: string) => {
           message={errorMessage}
           onRetry={handleRetry}
         />
-      )
+      );
     }
 
-    return <BookingPageContent bookings={bookings} onPayNow={handlePayNow} />
-  }
+    return (
+      <BookingPageContent
+        bookings={bookings}
+        onPayNow={handlePayNow}
+        onCancelled={handleRetry}
+      />
+    );
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#F5F7FA] px-4 py-8 sm:px-6 lg:px-8">
@@ -163,7 +168,7 @@ const handlePayNow = async (bookingId: string) => {
 
       {renderBookings()}
     </div>
-  )
-}
+  );
+};
 
-export default MyBookingsPage
+export default MyBookingsPage;

@@ -18,9 +18,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { getUsers } from "@/lib/api/user"
+
 import { User } from "@/lib/types/user"
 import RoleChangeButton from "./_components/role-change-button"
+import { getUsers } from "@/lib/api/user"
 
 const UsersPage = async () => {
   const usersData = await getUsers()
@@ -147,7 +148,7 @@ const UsersPage = async () => {
                 <TableBody>
                   {users.length > 0 ? (
                     users.map((user: User) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={user._id}>
                         <TableCell className="min-w-0 pl-6">
                           <div className="flex min-w-0 items-center gap-3">
                             <img
@@ -182,7 +183,7 @@ const UsersPage = async () => {
                         <TableCell className="pr-6 text-right">
                           <div className="flex justify-end">
                             <RoleChangeButton
-                              userId={user.id}
+                              userId={user._id}
                               currentRole={
                                 (user.role ?? "customer") as
                                   | "customer"

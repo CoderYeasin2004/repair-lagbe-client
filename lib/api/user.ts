@@ -1,10 +1,7 @@
 'use server'
 
 import type { IPaidBooking } from "@/lib/types/bookings"
-import { headers } from "next/headers";
-import { auth } from "../auth";
-import type { User } from "@/lib/types/user"
-import {  protectedMutation } from "../core/server";
+import {  authFetch, protectedMutation } from "../core/server";
 import { ApprovalStatus, IAdminService } from "../types/admin";
 import type {  BookingStatus, IAdminBooking, IAdminPaymentsResponse } from "@/lib/types/admin";
 
@@ -15,21 +12,15 @@ const BASE_URL =
 
 
 
-export const getUsers = async (): Promise<{ users: User[] }> => {
-  const result = await auth.api.listUsers({
-    query: {
-      limit: 100,
-      offset: 0,
-      sortBy: "createdAt",
-      sortDirection: "desc",
-    },
-    headers: await headers(),
-  })
+export const getUsers = async () => {
+  const res = await authFetch(`${BASE_URL}/user`);
 
-  return result
-}
+  if (!res.ok) {
+    throw new Error("Failed to fetch users");
+  }
 
-
+  return res.json();
+};
 
 
 export const getPaidBookingById = async (

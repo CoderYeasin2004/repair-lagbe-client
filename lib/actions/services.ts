@@ -103,3 +103,37 @@ export const updateServiceApproval = async (formData: FormData) => {
 
   return data;
 };
+
+
+export const updateService = async (formData: FormData) => {
+  const id = formData.get("id");
+
+  if (!id || typeof id !== "string") {
+    throw new Error("Service ID is required");
+  }
+
+  const serviceData = {
+    title: formData.get("title"),
+    category: formData.get("category"),
+    description: formData.get("description"),
+    image: formData.get("image"),
+    basePrice: Number(formData.get("basePrice")),
+    estimatedDuration: formData.get("estimatedDuration"),
+    serviceMode: formData.get("serviceMode"),
+    serviceArea: formData.get("serviceArea"),
+  };
+
+  const response = await protectedMutation(
+    `${BASE_URL}/services/${id}`,
+    "PATCH",
+    serviceData
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to update service");
+  }
+
+  return data;
+};

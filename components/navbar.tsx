@@ -305,9 +305,17 @@ export const Navbar = () => {
         aria-expanded={isUserDropdownOpen}
         className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
       >
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
-          {userInitials}
-        </div>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
+  {avatarImage ? (
+    <img
+      src={avatarImage}
+      alt={`${currentUser?.name} profile`}
+      className="h-full w-full rounded-full object-cover"
+    />
+  ) : (
+    userInitials
+  )}
+</div>
 
         <span className="hidden text-sm font-medium text-foreground sm:inline">
           {currentUser?.name}

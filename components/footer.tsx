@@ -21,46 +21,67 @@ const Footer = () => {
     <footer className="bg-[#102A43] text-white">
       <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 lg:px-10">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
-          <div className="flex items-center gap-3">
-            <a
-              href="https://www.facebook.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Facebook"
-              className="flex size-9 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-[#167D9A]"
+          <div className="flex flex-col items-start gap-4">
+            <Link
+              href="/"
+              className="flex items-center gap-2.5"
+              aria-label="RepairLagbe homepage"
             >
-              f
-            </a>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
+                <Wrench size={20} strokeWidth={2} />
+              </div>
 
-            <a
-              href="https://www.instagram.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Instagram"
-              className="flex size-9 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-[#167D9A]"
-            >
-              IG
-            </a>
+              <span className="text-lg font-semibold tracking-tight text-white">
+                RepairLagbe
+              </span>
+            </Link>
 
-            <a
-              href="https://www.linkedin.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="LinkedIn"
-              className="flex size-9 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-[#167D9A]"
-            >
-              in
-            </a>
+            <p className="text-sm text-slate-300">
+              Find trusted technicians for plumbing, electrical, carpentry, and
+              more.
+            </p>
 
-            <a
-              href="https://x.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="X"
-              className="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sm font-bold transition hover:bg-[#167D9A]"
-            >
-              X
-            </a>
+            <div className="flex items-center gap-3">
+              <a
+                href="https://www.facebook.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="flex size-9 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-[#167D9A]"
+              >
+                f
+              </a>
+
+              <a
+                href="https://www.instagram.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="flex size-9 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-[#167D9A]"
+              >
+                IG
+              </a>
+
+              <a
+                href="https://www.linkedin.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="flex size-9 items-center justify-center rounded-lg bg-white/10 font-bold transition hover:bg-[#167D9A]"
+              >
+                in
+              </a>
+
+              <a
+                href="https://x.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="X"
+                className="flex size-9 items-center justify-center rounded-lg bg-white/10 text-sm font-bold transition hover:bg-[#167D9A]"
+              >
+                X
+              </a>
+            </div>
           </div>
 
           {/* Quick Links */}

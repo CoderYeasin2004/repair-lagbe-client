@@ -120,6 +120,9 @@ export const Navbar = () => {
 
   const isActive = (href: string) => pathname === href
 
+  const isDashboard =
+    pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+
   const ThemeToggleIcon = theme === "dark" ? Sun : Moon
 
   const userInitials = currentUser?.name
@@ -131,7 +134,7 @@ export const Navbar = () => {
         .slice(0, 2)
     : "?"
 
-  const navLinks = (
+  const navLinks = isDashboard ? null : (
     <div className="flex items-center gap-8">
       {NAV_LINKS.map((link) => {
         const Icon = link.Icon
@@ -238,6 +241,17 @@ export const Navbar = () => {
               <Settings size={16} strokeWidth={2} />
               Update Profile
             </Link>
+
+            {isDashboard && (
+              <Link
+                href="/"
+                onClick={() => setIsUserDropdownOpen(false)}
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted hover:text-[#167D9A]"
+              >
+                <Home size={16} strokeWidth={2} />
+                Back to Site
+              </Link>
+            )}
 
             <div className="border-t border-border pt-3">
               <button
@@ -376,27 +390,28 @@ export const Navbar = () => {
         </div>
 
         <div className="space-y-1 p-6">
-          {NAV_LINKS.map((link) => {
-            const Icon = link.Icon
-            const active = isActive(link.href)
+          {!isDashboard &&
+            NAV_LINKS.map((link) => {
+              const Icon = link.Icon
+              const active = isActive(link.href)
 
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-[#167D9A]/10 text-[#167D9A]"
-                    : "text-foreground hover:bg-muted hover:text-[#167D9A]"
-                )}
-              >
-                <Icon size={18} strokeWidth={2} />
-                <span>{link.label}</span>
-              </Link>
-            )
-          })}
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                    active
+                      ? "bg-[#167D9A]/10 text-[#167D9A]"
+                      : "text-foreground hover:bg-muted hover:text-[#167D9A]"
+                  )}
+                >
+                  <Icon size={18} strokeWidth={2} />
+                  <span>{link.label}</span>
+                </Link>
+              )
+            })}
 
           <div className="space-y-2 border-t border-border pt-6">
             {isLoggedIn ? (

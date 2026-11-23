@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Navbar } from "@/components/navbar"
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/sonner"
-import Footer from "@/components/footer"
+import SiteFooter from "@/components/site-footer"
 
 
 
@@ -60,7 +60,7 @@ return (
       <ThemeProvider>
         <Navbar />
         {children}
-        <Footer />
+        <SiteFooter />
       </ThemeProvider>
 
       <Toaster />

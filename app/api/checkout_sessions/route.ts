@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { headers } from "next/headers"
 
 import { stripe } from "../../../lib/stripe"
-import { getSession } from "@/lib/core/server"
+import { getSession, getToken } from "@/lib/core/server"
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
 
@@ -20,9 +20,14 @@ export async function POST(request: Request) {
 
     const { bookingId } = await request.json()
 
-    const bookingResponse = await fetch(`${BASE_URL}/bookings/${bookingId}`, {
-      cache: "no-store",
-    })
+    const token = await getToken()
+
+const bookingResponse = await fetch(`${BASE_URL}/bookings/${bookingId}`, {
+  cache: "no-store",
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+})
 
     if (!bookingResponse.ok) {
       return NextResponse.json(

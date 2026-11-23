@@ -75,7 +75,6 @@ export const Navbar = () => {
   const currentUser = session?.user ?? null
   const isLoggedIn = !!currentUser
 
-  // Resolve role safely
   const userRole =
     currentUser?.role && ROLE_CONFIG[currentUser.role]
       ? currentUser.role
@@ -85,30 +84,29 @@ export const Navbar = () => {
   const dashboardRoute = ROUTE_MAP[userRole]
 
   // Welcome toast
-  const storage =
-    typeof window !== "undefined" ? window.localStorage : null
-
   useEffect(() => {
     if (isPending) return
 
     const hasShownLoginToast =
-      storage?.getItem("welcomeToastShown") === "true"
+      localStorage.getItem("welcomeToastShown") === "true"
 
     if (isLoggedIn && !hasShownLoginToast) {
       toast.success(`Welcome back, ${currentUser.name}!`)
-      storage?.setItem("welcomeToastShown", "true")
+      localStorage.setItem("welcomeToastShown", "true")
     }
 
     if (!isLoggedIn) {
-      storage?.removeItem("welcomeToastShown")
+      localStorage.removeItem("welcomeToastShown")
     }
-  }, [isPending, isLoggedIn, currentUser?.name, storage])
+  }, [isPending, isLoggedIn, currentUser?.name])
 
   const handleSignOut = async () => {
     await signOut()
 
     setIsUserDropdownOpen(false)
     setIsMobileMenuOpen(false)
+
+    localStorage.removeItem("welcomeToastShown")
 
     toast.success("Logged out successfully!")
     router.push("/sign-in")
@@ -134,10 +132,7 @@ export const Navbar = () => {
         .slice(0, 2)
     : "?"
 
-  // Avatar image URL from session, fallback to initials
-  const avatarImage = currentUser?.image
-    ? currentUser.image
-    : null
+  const avatarImage = currentUser?.image || null
 
   const navLinks = isDashboard ? null : (
     <div className="flex items-center gap-8">
@@ -222,10 +217,9 @@ export const Navbar = () => {
 
             <div className="flex items-center gap-1 rounded-full px-2 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-[#167D9A]" />
-
               <span
                 className={cn(
-                  "text-xs font-medium rounded-full border px-2 py-0.5",
+                  "rounded-full border px-2 py-0.5 text-xs font-medium",
                   roleConfig.border,
                   roleConfig.bg,
                   roleConfig.text
@@ -290,7 +284,6 @@ export const Navbar = () => {
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background/50 transition-all hover:bg-muted hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
     >
       <ThemeToggleIcon size={18} strokeWidth={2.5} />
-
       <span className="sr-only">
         {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       </span>
@@ -306,16 +299,16 @@ export const Navbar = () => {
         className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all hover:bg-muted focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
       >
         <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
-  {avatarImage ? (
-    <img
-      src={avatarImage}
-      alt={`${currentUser?.name} profile`}
-      className="h-full w-full rounded-full object-cover"
-    />
-  ) : (
-    userInitials
-  )}
-</div>
+          {avatarImage ? (
+            <img
+              src={avatarImage}
+              alt={`${currentUser?.name} profile`}
+              className="h-full w-full rounded-full object-cover"
+            />
+          ) : (
+            userInitials
+          )}
+        </div>
 
         <span className="hidden text-sm font-medium text-foreground sm:inline">
           {currentUser?.name}
@@ -332,9 +325,14 @@ export const Navbar = () => {
     </div>
   )
 
-  const rightContent = isLoggedIn
-    ? userActionsLoggedIn
-    : authActionsLoggedOut
+  // Wait for session before choosing logged-in or logged-out UI
+  const rightContent = isPending ? (
+    <div className="h-9 w-28 animate-pulse rounded-lg bg-muted" />
+  ) : isLoggedIn ? (
+    userActionsLoggedIn
+  ) : (
+    authActionsLoggedOut
+  )
 
   return (
     <>
@@ -386,12 +384,16 @@ export const Navbar = () => {
 
       <div
         className={cn(
-          "fixed inset-y-0 right-0 z-40 w-full max-w-md transform border-l border-border bg-background transition-transform duration-300 ease-in-out",
+          "fixed inset-y-0 right-0 z-40 w-full max-w-md transform border-l border-border bg-background transition-transform duration-300 ease-in-out lg:hidden",
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
         )}
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-6">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
               <Wrench size={20} strokeWidth={2} />
             </div>
@@ -435,12 +437,25 @@ export const Navbar = () => {
             })}
 
           <div className="space-y-2 border-t border-border pt-6">
-            {isLoggedIn ? (
+            {isPending ? (
+              <div className="space-y-3 px-4">
+                <div className="h-10 animate-pulse rounded-lg bg-muted" />
+                <div className="h-10 animate-pulse rounded-lg bg-muted" />
+              </div>
+            ) : isLoggedIn ? (
               <>
                 <div className="px-4">
                   <div className="flex items-center gap-3 rounded-lg bg-muted/50 px-3 py-2.5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
-                      {userInitials}
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
+                      {avatarImage ? (
+                        <img
+                          src={avatarImage}
+                          alt={`${currentUser?.name} profile`}
+                          className="h-full w-full rounded-full object-cover"
+                        />
+                      ) : (
+                        userInitials
+                      )}
                     </div>
 
                     <div className="min-w-0 flex-1">
@@ -485,6 +500,17 @@ export const Navbar = () => {
                     Update Profile
                   </Link>
 
+                  {isDashboard && (
+                    <Link
+                      href="/"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
+                    >
+                      <Home size={18} strokeWidth={2} />
+                      Back to Site
+                    </Link>
+                  )}
+
                   <button
                     onClick={handleSignOut}
                     className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
@@ -498,6 +524,7 @@ export const Navbar = () => {
               <div className="space-y-2">
                 <Link
                   href="/sign-in"
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
                 >
                   <User size={18} strokeWidth={2} />
@@ -506,6 +533,7 @@ export const Navbar = () => {
 
                 <Link
                   href="/sign-up"
+                  onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 rounded-lg bg-[#167D9A] px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors"
                 >
                   <User size={18} strokeWidth={2} className="text-white" />

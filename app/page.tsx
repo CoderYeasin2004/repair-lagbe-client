@@ -32,6 +32,7 @@ import {
 } from "lucide-react"
 
 import { getServices } from "@/lib/api/services"
+import { HomePageSkeleton } from "@/components/home-page-skeleton"
 
 const HERO_IMAGES = [
   { src: "/assets/img-1.png", alt: "Technician repairing a smartphone" },
@@ -357,7 +358,17 @@ function FeaturedServices() {
 }
 
 export default function HomePage() {
-  return (
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Simulate data loading then render the page
+  useEffect(() => {
+    const timeout = setTimeout(() => setIsLoading(false), 2000)
+    return () => clearTimeout(timeout)
+  }, [])
+
+  return isLoading ? (
+    <HomePageSkeleton />
+  ) : (
     <main className="min-w-0 overflow-x-hidden">
       {/* Existing Hero Section */}
       <section className="bg-[#F5F7FA]">

@@ -5,6 +5,9 @@ import { headers } from "next/headers";
 import { auth } from "../auth";
 import type { User } from "@/lib/types/user"
 import {  protectedMutation } from "../core/server";
+import { ApprovalStatus, IAdminService } from "../types/admin";
+import type {  BookingStatus, IAdminBooking, IAdminPaymentsResponse } from "@/lib/types/admin";
+
 
 
 const BASE_URL =
@@ -61,3 +64,61 @@ export const getAdminStats = async () => {
 
   return data;
 };
+
+
+export const getAdminServices = async (
+  status?: ApprovalStatus
+): Promise<IAdminService[]> => {
+  const url = status
+    ? `${BASE_URL}/admin/services?status=${status}`
+    : `${BASE_URL}/admin/services`;
+
+  const response = await protectedMutation(url, "GET");
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch services");
+  }
+
+  return data;
+};
+
+
+
+
+export const getAdminBookings = async (
+  status?: BookingStatus
+): Promise<IAdminBooking[]> => {
+  const url = status
+    ? `${BASE_URL}/admin/bookings?status=${status}`
+    : `${BASE_URL}/admin/bookings`;
+
+  const response = await protectedMutation(url, "GET");
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to fetch bookings");
+  }
+
+  return data;
+};
+
+
+
+// Fetch all admin payment transactions
+export const getAdminPayments =
+  async (): Promise<IAdminPaymentsResponse> => {
+    const response = await protectedMutation(
+      `${BASE_URL}/admin/payments`,
+      "GET"
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to fetch transactions");
+    }
+
+    return data;
+  };

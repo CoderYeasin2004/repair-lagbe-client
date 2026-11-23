@@ -84,3 +84,22 @@ export const updateBookingStatus = async (
 
   return result
 }
+
+export const updateServiceApproval = async (formData: FormData) => {
+  const id = formData.get("id");
+  const approvalStatus = formData.get("approvalStatus");
+
+  const response = await protectedMutation(
+    `${BASE_URL}/admin/services/${id}/approval`,
+    "PATCH",
+    { approvalStatus }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to update service approval");
+  }
+
+  return data;
+};

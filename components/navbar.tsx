@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -22,7 +23,6 @@ import {
 import { cn } from "@/lib/utils"
 import { signOut, useSession } from "@/lib/auth-client"
 import { toast } from "sonner"
-import { router } from "better-auth/api"
 
 const ROUTE_MAP: Record<string, string> = {
   customer: "/dashboard/customer",
@@ -30,11 +30,7 @@ const ROUTE_MAP: Record<string, string> = {
   admin: "/dashboard/admin",
 }
 
-const PROFILE_ROUTE_MAP: Record<string, string> = {
-  customer: "/customer/profile",
-  technician: "/technician/profile",
-  admin: "/admin/profile",
-}
+const PROFILE_ROUTE = "/dashboard/profile"
 
 const ROLE_CONFIG: Record<
   string,
@@ -69,28 +65,37 @@ const NAV_LINKS = [
 export const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false)
+
   const { theme, setTheme } = useTheme()
   const pathname = usePathname()
   const router = useRouter()
-
-  // Session integration is here.
 
   const { data: session, isPending } = useSession()
 
   const currentUser = session?.user ?? null
   const isLoggedIn = !!currentUser
 
-  // Check localStorage to ensure welcome toast only shows once per login session
-  // Use browser detection for SSR compatibility
-  const storage = typeof window !== "undefined" ? window.localStorage : null
+  // Resolve role safely
+  const userRole =
+    currentUser?.role && ROLE_CONFIG[currentUser.role]
+      ? currentUser.role
+      : "customer"
+
+  const roleConfig = ROLE_CONFIG[userRole]
+  const dashboardRoute = ROUTE_MAP[userRole]
+
+  // Welcome toast
+  const storage =
+    typeof window !== "undefined" ? window.localStorage : null
 
   useEffect(() => {
     if (isPending) return
 
-    const hasShownLoginToast = storage?.getItem("welcomeToastShown") === "true"
+    const hasShownLoginToast =
+      storage?.getItem("welcomeToastShown") === "true"
 
     if (isLoggedIn && !hasShownLoginToast) {
-      toast.success(`Welcome back, ${currentUser.name!}`)
+      toast.success(`Welcome back, ${currentUser.name}!`)
       storage?.setItem("welcomeToastShown", "true")
     }
 
@@ -101,11 +106,14 @@ export const Navbar = () => {
 
   const handleSignOut = async () => {
     await signOut()
+
     setIsUserDropdownOpen(false)
     setIsMobileMenuOpen(false)
+
     toast.success("Logged out successfully!")
     router.push("/sign-in")
   }
+
   const handleThemeToggle = useCallback(() => {
     setTheme(theme === "dark" ? "light" : "dark")
   }, [theme, setTheme])
@@ -114,11 +122,21 @@ export const Navbar = () => {
 
   const ThemeToggleIcon = theme === "dark" ? Sun : Moon
 
+  const userInitials = currentUser?.name
+    ? currentUser.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "?"
+
   const navLinks = (
     <div className="flex items-center gap-8">
       {NAV_LINKS.map((link) => {
         const Icon = link.Icon
         const active = isActive(link.href)
+
         return (
           <Link
             key={link.href}
@@ -147,6 +165,7 @@ export const Navbar = () => {
       >
         Sign In
       </Link>
+
       <Link
         href="/sign-up"
         className="rounded-lg bg-[#167D9A] px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-[#0f5f7a]"
@@ -155,17 +174,6 @@ export const Navbar = () => {
       </Link>
     </div>
   )
-
-  const userInitials = currentUser?.name
-    ? currentUser.name
-        .split(" ")
-        .map((n) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2)
-    : "?"
-
-  const roleConfig = ROLE_CONFIG[currentUser?.role ?? "customer"]
 
   const profileDropdown = (
     <div
@@ -180,24 +188,28 @@ export const Navbar = () => {
       <div className="rounded-xl border border-border bg-background p-4 shadow-lg">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
+            <div className="shrink-0">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#167D9A]/10 text-sm font-medium text-[#167D9A]">
                 {userInitials}
               </div>
             </div>
+
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-foreground">
                 {currentUser?.name}
               </p>
+
               <p className="truncate text-xs text-muted-foreground">
                 {currentUser?.email}
               </p>
             </div>
+
             <div className="flex items-center gap-1 rounded-full px-2 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-[#167D9A]" />
+
               <span
                 className={cn(
-                  "text-xs font-medium",
+                  "text-xs font-medium rounded-full border px-2 py-0.5",
                   roleConfig.border,
                   roleConfig.bg,
                   roleConfig.text
@@ -207,23 +219,26 @@ export const Navbar = () => {
               </span>
             </div>
           </div>
+
           <div className="border-t border-border pt-3">
             <Link
-              href={ROUTE_MAP[currentUser?.role ?? "customer"]}
+              href={dashboardRoute}
               onClick={() => setIsUserDropdownOpen(false)}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted hover:text-[#167D9A]"
             >
               <LayoutDashboard size={16} strokeWidth={2} />
               Dashboard
             </Link>
+
             <Link
-              href={PROFILE_ROUTE_MAP[currentUser?.role ?? "customer"]}
+              href={PROFILE_ROUTE}
               onClick={() => setIsUserDropdownOpen(false)}
               className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors hover:bg-muted hover:text-[#167D9A]"
             >
               <Settings size={16} strokeWidth={2} />
               Update Profile
             </Link>
+
             <div className="border-t border-border pt-3">
               <button
                 onClick={handleSignOut}
@@ -248,6 +263,7 @@ export const Navbar = () => {
       className="relative inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background/50 transition-all hover:bg-muted hover:text-foreground focus:ring-2 focus:ring-ring focus:ring-offset-1 focus:outline-none"
     >
       <ThemeToggleIcon size={18} strokeWidth={2.5} />
+
       <span className="sr-only">
         {theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
       </span>
@@ -265,24 +281,29 @@ export const Navbar = () => {
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
           {userInitials}
         </div>
+
         <span className="hidden text-sm font-medium text-foreground sm:inline">
           {currentUser?.name}
         </span>
+
         <ChevronDown
           size={14}
           strokeWidth={2.5}
           className="text-muted-foreground"
         />
       </button>
+
       {isLoggedIn && isUserDropdownOpen && profileDropdown}
     </div>
   )
 
-  const rightContent = isLoggedIn ? userActionsLoggedIn : authActionsLoggedOut
+  const rightContent = isLoggedIn
+    ? userActionsLoggedIn
+    : authActionsLoggedOut
 
   return (
     <>
-      <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md transition-colors supports-[backdrop-filter]:bg-background/60">
+      <nav className="sticky top-0 z-50 w-full border-b border-background/50 bg-background/80 backdrop-blur-md transition-colors supports-backdrop-filter:bg-background/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
             <Link
@@ -290,9 +311,10 @@ export const Navbar = () => {
               className="flex items-center gap-2.5"
               aria-label="RepairLagbe homepage"
             >
-              <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
                 <Wrench size={20} strokeWidth={2} />
               </div>
+
               <span className="text-lg font-semibold tracking-tight text-[#102A43]">
                 RepairLagbe
               </span>
@@ -309,6 +331,7 @@ export const Navbar = () => {
 
             <div className="flex items-center gap-3 lg:hidden">
               {themeToggle}
+
               <button
                 onClick={() => setIsMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle navigation menu"
@@ -334,13 +357,15 @@ export const Navbar = () => {
       >
         <div className="flex h-16 items-center justify-between border-b border-border px-6">
           <Link href="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#167D9A]/10 text-[#167D9A]">
               <Wrench size={20} strokeWidth={2} />
             </div>
+
             <span className="text-lg font-semibold tracking-tight text-[#102A43]">
               RepairLagbe
             </span>
           </Link>
+
           <button
             onClick={() => setIsMobileMenuOpen(false)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground hover:bg-muted"
@@ -349,10 +374,12 @@ export const Navbar = () => {
             <X size={20} strokeWidth={2.5} />
           </button>
         </div>
+
         <div className="space-y-1 p-6">
           {NAV_LINKS.map((link) => {
             const Icon = link.Icon
             const active = isActive(link.href)
+
             return (
               <Link
                 key={link.href}
@@ -370,6 +397,7 @@ export const Navbar = () => {
               </Link>
             )
           })}
+
           <div className="space-y-2 border-t border-border pt-6">
             {isLoggedIn ? (
               <>
@@ -378,16 +406,19 @@ export const Navbar = () => {
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#167D9A]/10 text-xs font-medium text-[#167D9A]">
                       {userInitials}
                     </div>
+
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold text-foreground">
                         {currentUser?.name}
                       </p>
+
                       <p className="truncate text-xs text-muted-foreground">
                         {currentUser?.email}
                       </p>
+
                       <span
                         className={cn(
-                          "mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium",
+                          "mt-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium",
                           roleConfig.border,
                           roleConfig.bg,
                           roleConfig.text
@@ -398,26 +429,29 @@ export const Navbar = () => {
                     </div>
                   </div>
                 </div>
+
                 <div className="space-y-1 border-t border-border pt-4">
                   <Link
-                    href={ROUTE_MAP[currentUser?.role ?? "customer"]}
+                    href={dashboardRoute}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
                   >
                     <LayoutDashboard size={18} strokeWidth={2} />
                     Dashboard
                   </Link>
+
                   <Link
-                    href={PROFILE_ROUTE_MAP[currentUser?.role ?? "customer"]}
+                    href={PROFILE_ROUTE}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-foreground transition-colors hover:bg-muted"
                   >
                     <Settings size={18} strokeWidth={2} />
                     Update Profile
                   </Link>
+
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
+                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-destructive transition-colors hover:bg-destructive/10"
                   >
                     <LogOut size={18} strokeWidth={2} />
                     Sign Out
@@ -433,6 +467,7 @@ export const Navbar = () => {
                   <User size={18} strokeWidth={2} />
                   Sign In
                 </Link>
+
                 <Link
                   href="/sign-up"
                   className="flex items-center gap-3 rounded-lg bg-[#167D9A] px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors"
@@ -445,8 +480,6 @@ export const Navbar = () => {
           </div>
         </div>
       </div>
-
-      {isLoggedIn && isUserDropdownOpen && profileDropdown}
     </>
   )
 }

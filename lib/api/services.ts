@@ -1,5 +1,8 @@
 'use server'
-import { authFetch } from "../core/server"
+
+import { protectedMutation } from "../core/server"
+
+
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"
@@ -43,13 +46,11 @@ export const getMyBookings = async (
     ? "technicianEmail"
     : "customerEmail"
 
-  const response = await authFetch(
+  const response = await protectedMutation(
     `${BASE_URL}/bookings?${queryKey}=${encodeURIComponent(email)}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
+    "GET"
   )
+
 
   const result = await response.json()
 
@@ -64,12 +65,9 @@ export const getMyBookingCounts = async (
   email: string,
   role?: string
 ) => {
-  const response = await authFetch(
-    `${BASE_URL}/bookings/count?userid=${encodeURIComponent(email)}&role=${role || "customer"}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    }
+  const response = await protectedMutation(
+    `${BASE_URL}/bookings/count?userid=${encodeURIComponent(email)}&role=${role}`,
+    "GET"
   )
 
   if (!response.ok) {

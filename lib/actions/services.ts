@@ -1,5 +1,5 @@
 'use server'
-import { authFetch } from "../core/server"
+import { protectedMutation } from "../core/server"
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000"
@@ -8,14 +8,11 @@ const BASE_URL =
 export const createServices = async (serviceData: FormData) => {
   const serviceObject = Object.fromEntries(serviceData.entries())
 
-  const response = await authFetch(`${BASE_URL}/services`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(serviceObject),
-  })
-
+ const response = await protectedMutation(
+  `${BASE_URL}/services`,
+  "POST",
+  serviceObject
+)
   if (!response.ok) {
     throw new Error("Failed to create service.")
   }
@@ -33,29 +30,28 @@ export const createBooking = async (bookingData: {
   preferredDate: string
   problemDescription: string
 }) => {
-  const response = await authFetch(`${BASE_URL}/bookings`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(bookingData),
-  })
+  const response = await protectedMutation(
+    `${BASE_URL}/bookings`,
+    "POST",
+    bookingData
+  )
+
+  const result = await response.json()
 
   if (!response.ok) {
-    const result = await response.json()
     throw new Error(result.message || "Failed to submit request.")
   }
 
-  return response.json()
+  return result
 }
 
  
 
 export const deleteService = async (serviceId: string) => {
-  const response = await authFetch(`${BASE_URL}/services/${serviceId}`, {
-    method: "DELETE",
-  })
-
+  const response = await protectedMutation(
+  `${BASE_URL}/services/${serviceId}`,
+  "DELETE"
+)
   const result = await response.json()
 
   if (!response.ok) {
@@ -71,16 +67,14 @@ export const updateBookingStatus = async (
   status: string,
   finalAmount?: number
 ) => {
-  const res = await authFetch(`${BASE_URL}/bookings/${bookingId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      status,
-      ...(finalAmount !== undefined && { finalAmount }),
-    }),
-  })
+  const res = await protectedMutation(
+  `${BASE_URL}/bookings/${bookingId}`,
+  "PATCH",
+  {
+    status,
+    ...(finalAmount !== undefined && { finalAmount }),
+  }
+)
 
   const result = await res.json()
 

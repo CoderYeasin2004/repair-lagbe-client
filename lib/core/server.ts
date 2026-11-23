@@ -34,12 +34,35 @@ export const authFetch = async (
       authorization: `Bearer ${token}`,
     },
   })
+  if(res.status === 401 || res.status === 403){
+    redirect('/unauthorized')
+  }
 
   return res
 }
 
+export const protectedMutation = async (
+  api: string,
+  method: string,
+  data?: unknown
+) => {
+  const token = await getToken()
 
+  const res = await fetch(api, {
+    method,
+    cache: "no-store",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${token}`,
+    },
+    ...(data !== undefined ? { body: JSON.stringify(data) } : {}),
+  })
+  if(res.status === 401 || res.status === 403){
+    redirect('/unauthorized')
+  }
 
+  return res
+}
 
 export const requireRole = async (role: string) =>{
   const session = await getSession();

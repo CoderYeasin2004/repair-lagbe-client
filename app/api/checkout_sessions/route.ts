@@ -30,7 +30,12 @@ export async function POST(request: Request) {
         { status: bookingResponse.status }
       )
     }
-
+    if (userSession?.user?.role !== "customer") {
+      return NextResponse.json(
+        { error: "Only customers can make payments." },
+        { status: 403 }
+      )
+    }
     const booking = await bookingResponse.json()
 
     if (booking.customerEmail !== customerEmail) {

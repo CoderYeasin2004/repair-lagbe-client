@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -113,8 +114,10 @@ const SignUpPage = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitMessage, setSubmitMessage] = useState("")
-  const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+
+  const router = useRouter()
 
   useEffect(() => {
     const { fullName, email, role } = form
@@ -161,7 +164,7 @@ const SignUpPage = () => {
   const handleSignUp = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!validate() || isSubmitting) {
+    if (!validate() || isSubmitting || isGoogleLoading) {
       setSubmitMessage("")
       return
     }
@@ -193,6 +196,29 @@ const SignUpPage = () => {
       setSubmitMessage("Something went wrong. Please try again.")
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleGoogleSignUp = async () => {
+    if (isGoogleLoading || isSubmitting) return
+
+    setIsGoogleLoading(true)
+    setSubmitMessage("")
+
+    try {
+      const { error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      })
+
+      if (error) {
+        setSubmitMessage(error.message || "Google Sign Up failed.")
+        setIsGoogleLoading(false)
+      }
+    } catch (error) {
+      console.error("Google Sign Up Exception:", error)
+      setSubmitMessage("Google Sign Up failed. Please try again.")
+      setIsGoogleLoading(false)
     }
   }
 
@@ -435,7 +461,8 @@ const SignUpPage = () => {
                             ))}
                           </div>
                         </div>
-                        {/* {Account types field } */}
+
+                        {/* Account types field */}
 
                         <div className="space-y-2">
                           <label className={labelBase}>Account type</label>
@@ -502,13 +529,61 @@ const SignUpPage = () => {
                         <Button
                           type="submit"
                           className={`${btnPrimary} w-full`}
-                          disabled={isSubmitting}
+                          disabled={isSubmitting || isGoogleLoading}
                         >
                           {isSubmitting
                             ? "Creating Account..."
                             : "Create Account"}
                         </Button>
                       </form>
+
+                      <div className="mt-5">
+                        <div className="relative mb-5">
+                          <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t border-border" />
+                          </div>
+                          <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-3 text-muted-foreground">
+                              Or continue with
+                            </span>
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full gap-3"
+                          onClick={handleGoogleSignUp}
+                          disabled={isGoogleLoading || isSubmitting}
+                        >
+                          <svg
+                            viewBox="0 0 48 48"
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          >
+                            <path
+                              fill="#EA4335"
+                              d="M24 9.5c3.5 0 6.3 1.2 8.5 3.2l6.3-6.3C35 2.5 30 0.5 24 0.5 14.8.5 6.9 5.8 3.1 13.5l7.4 5.7C12.3 13.1 17.7 9.5 24 9.5Z"
+                            />
+                            <path
+                              fill="#4285F4"
+                              d="M46.1 24.5c0-1.6-.2-3.2-.5-4.7H24v9h12.4c-.6 3-2.3 5.5-4.8 7.2l7.4 5.7c4.4-4.1 7.1-10.1 7.1-17.2Z"
+                            />
+                            <path
+                              fill="#FBBC05"
+                              d="M10.5 28.8a14.5 14.5 0 0 1 0-9.6l-7.4-5.7a23.5 23.5 0 0 0 0 21l7.4-5.7Z"
+                            />
+                            <path
+                              fill="#34A853"
+                              d="M24 47.5c6 0 11-2 14.7-5.8l-7.4-5.7c-2 1.4-4.5 2.2-7.3 2.2-6.3 0-11.7-3.6-13.5-9.2l-7.4 5.7C6.9 42.2 14.8 47.5 24 47.5Z"
+                            />
+                          </svg>
+
+                          {isGoogleLoading
+                            ? "Connecting to Google..."
+                            : "Continue with Google"}
+                        </Button>
+                      </div>
 
                       <p className="mt-8 text-center text-sm text-muted-foreground">
                         Already have an account?{" "}
